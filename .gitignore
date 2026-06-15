@@ -1,0 +1,72 @@
+# Compiled output
+target/
+out/
+build/
+*.class
+*.jar
+*.war
+*.ear
+
+# IDE - IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# IDE - Eclipse
+.classpath
+.project
+.settings/
+.factorypath
+.springBeans
+
+# IDE - VS Code
+.vscode/
+
+# IDE - NetBeans
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+$RECYCLE.BIN/
+
+# Maven
+.mvn/wrapper/maven-wrapper.jar
+**/mvnw
+**/mvnw.cmd
+
+# Node / Frontend
+easybuy-frontend/node_modules/
+easybuy-frontend/dist/
+easybuy-frontend/.vite/
+easybuy-frontend/npm-debug.log*
+easybuy-frontend/yarn-debug.log*
+easybuy-frontend/yarn-error.log*
+easybuy-frontend/pnpm-debug.log*
+easybuy-frontend/.env
+easybuy-frontend/.env.local
+easybuy-frontend/.env.*.local
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+*.orig
+
+# Maven local repo copies
+.m2/
+
+# IDE workspace caches
+*.lck

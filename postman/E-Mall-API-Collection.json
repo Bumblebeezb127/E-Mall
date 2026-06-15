@@ -1,0 +1,1020 @@
+{
+	"info": {
+		"_postman_id": "e-mall-api-collection",
+		"name": "E-Mall 微服务API测试集",
+		"description": "电商微服务系统核心接口测试集合，包含用户、商品、订单模块",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "userId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "productId",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "01-用户模块",
+			"item": [
+				{
+					"name": "用户注册-用户A",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('响应状态码为200', function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('返回成功标志', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.code).to.eql(200);",
+									"});",
+									"",
+									"pm.test('响应包含message', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.be.a('string');",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"testuser001\",\n    \"password\": \"password123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/user/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "user", "register"]
+						},
+						"description": "测试用户注册接口-用户A"
+					},
+					"response": []
+				},
+				{
+					"name": "用户注册-用户B",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('响应状态码为200', function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('返回成功标志', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.code).to.eql(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"testuser002\",\n    \"password\": \"password456\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/user/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "user", "register"]
+						},
+						"description": "测试用户注册接口-用户B"
+					},
+					"response": []
+				},
+				{
+					"name": "用户登录",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('响应状态码为200', function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('返回成功标志', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.code).to.eql(200);",
+									"});",
+									"",
+									"pm.test('返回包含token', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.have.property('token');",
+									"    pm.expect(jsonData.data.token).to.be.a('string');",
+									"});",
+									"",
+									"pm.test('返回包含userId', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.have.property('id');",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.token) {",
+									"        pm.collectionVariables.set('token', jsonData.data.token);",
+									"        pm.collectionVariables.set('userId', jsonData.data.id);",
+									"        console.log('Token已保存:', jsonData.data.token);",
+									"        console.log('UserId已保存:', jsonData.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"testuser001\",\n    \"password\": \"password123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/user/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "user", "login"]
+						},
+						"description": "用户登录获取Token"
+					},
+					"response": []
+				},
+				{
+					"name": "获取用户信息",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('响应状态码为200', function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('返回成功标志', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.code).to.eql(200);",
+									"});",
+									"",
+									"pm.test('返回包含用户信息', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.have.property('id');",
+									"    pm.expect(jsonData.data).to.have.property('username');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/user/info",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "user", "info"]
+						},
+						"description": "获取当前用户信息"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "02-商品模块",
+			"item": [
+				{
+					"name": "获取商品列表-第1次",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('响应状态码为200', function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('返回成功标志', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.code).to.eql(200);",
+									"});",
+									"",
+									"pm.test('返回包含商品列表', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.have.property('records');",
+									"    pm.expect(jsonData.data.records).to.be.an('array');",
+									"});",
+									"",
+									"pm.test('返回包含分页信息', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.have.property('total');",
+									"    pm.expect(jsonData.data).to.have.property('page');",
+									"    pm.expect(jsonData.data).to.have.property('size');",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data.records && jsonData.data.records.length > 0) {",
+									"        pm.collectionVariables.set('productId', jsonData.data.records[0].id);",
+									"        console.log('ProductId已保存:', jsonData.data.records[0].id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/product/list?page=1&size=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "product", "list"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						},
+						"description": "获取商品列表-第1次查询"
+					},
+					"response": []
+				},
+				{
+					"name": "获取商品列表-第2次(第2页)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('响应状态码为200', function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('返回成功标志', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.code).to.eql(200);",
+									"});",
+									"",
+									"pm.test('分页参数正确', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.page).to.eql(2);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/product/list?page=2&size=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "product", "list"],
+							"query": [
+								{
+									"key": "page",
+									"value": "2"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						},
+						"description": "获取商品列表-第2次查询第2页"
+					},
+					"response": []
+				},
+				{
+					"name": "获取商品列表-第3次(小页面)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('响应状态码为200', function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('返回成功标志', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.code).to.eql(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/product/list?page=1&size=5",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "product", "list"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "size",
+									"value": "5"
+								}
+							]
+						},
+						"description": "获取商品列表-第3次查询，每页5条"
+					},
+					"response": []
+				},
+				{
+					"name": "获取商品列表-第4次(验证库存字段)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('响应状态码为200', function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('商品包含库存信息', function() {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data.records && jsonData.data.records.length > 0) {",
+									"        pm.expect(jsonData.data.records[0]).to.have.property('stock');",
+									"        pm.expect(jsonData.data.records[0]).to.have.property('price');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/product/list?page=1&size=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "product", "list"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						},
+						"description": "获取商品列表-第4次，验证库存字段"
+					},
+					"response": []
+				},
+				{
+					"name": "获取商品列表-第5次(验证价格字段)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('响应状态码为200', function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('商品包含价格信息', function() {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data.records && jsonData.data.records.length > 0) {",
+									"        pm.expect(jsonData.data.records[0]).to.have.property('price');",
+									"        var price = jsonData.data.records[0].price;",
+									"        pm.expect(price).to.be.above(0);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/product/list?page=1&size=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "product", "list"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						},
+						"description": "获取商品列表-第5次，验证价格字段"
+					},
+					"response": []
+				},
+				{
+					"name": "查询商品详情-ID1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('响应状态码为200', function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('返回成功标志', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.code).to.eql(200);",
+									"});",
+									"",
+									"pm.test('返回包含商品详情', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.have.property('id');",
+									"    pm.expect(jsonData.data).to.have.property('name');",
+									"    pm.expect(jsonData.data).to.have.property('price');",
+									"    pm.expect(jsonData.data).to.have.property('stock');",
+									"});",
+									"",
+									"pm.test('商品状态为上架(1)', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.status).to.eql(1);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/product/detail/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "product", "detail", "1"]
+						},
+						"description": "查询商品1的详细信息"
+					},
+					"response": []
+				},
+				{
+					"name": "查询商品详情-ID2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('响应状态码为200', function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('返回成功标志', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.code).to.eql(200);",
+									"});",
+									"",
+									"pm.test('返回包含商品详情', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.have.property('id');",
+									"    pm.expect(jsonData.data.id).to.eql(2);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/product/detail/2",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "product", "detail", "2"]
+						},
+						"description": "查询商品2的详细信息"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "03-订单模块",
+			"item": [
+				{
+					"name": "创建订单-订单1(商品1)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('响应状态码为200', function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('返回成功标志', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.code).to.eql(200);",
+									"});",
+									"",
+									"pm.test('返回包含订单信息', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.have.property('orderId');",
+									"    pm.expect(jsonData.data).to.have.property('orderNo');",
+									"});",
+									"",
+									"pm.test('订单状态为待支付(0)', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.status).to.eql(0);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userId\": {{userId}},\n    \"productId\": 1,\n    \"quantity\": 2\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/order/create",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "order", "create"]
+						},
+						"description": "创建订单-购买商品1，数量2"
+					},
+					"response": []
+				},
+				{
+					"name": "创建订单-订单2(商品1)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('响应状态码为200', function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('返回成功标志', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.code).to.eql(200);",
+									"});",
+									"",
+									"pm.test('返回包含订单号', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.orderNo).to.be.a('string');",
+									"    pm.expect(jsonData.data.orderNo).to.include('ORD');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userId\": {{userId}},\n    \"productId\": 1,\n    \"quantity\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/order/create",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "order", "create"]
+						},
+						"description": "创建订单-购买商品1，数量1"
+					},
+					"response": []
+				},
+				{
+					"name": "创建订单-订单3(商品2)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('响应状态码为200', function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('返回成功标志', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.code).to.eql(200);",
+									"});",
+									"",
+									"pm.test('订单金额计算正确', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.totalAmount).to.be.above(0);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userId\": {{userId}},\n    \"productId\": 2,\n    \"quantity\": 3\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/order/create",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "order", "create"]
+						},
+						"description": "创建订单-购买商品2，数量3"
+					},
+					"response": []
+				},
+				{
+					"name": "查询我的订单-第1次",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('响应状态码为200', function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('返回成功标志', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.code).to.eql(200);",
+									"});",
+									"",
+									"pm.test('返回包含订单列表', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.be.an('array');",
+									"});",
+									"",
+									"pm.test('订单包含订单项', function() {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data.length > 0) {",
+									"        pm.expect(jsonData.data[0]).to.have.property('items');",
+									"        pm.expect(jsonData.data[0].items).to.be.an('array');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/order/list?userId={{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "order", "list"],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						},
+						"description": "查询当前用户的订单列表-第1次"
+					},
+					"response": []
+				},
+				{
+					"name": "查询我的订单-第2次",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('响应状态码为200', function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('返回成功标志', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.code).to.eql(200);",
+									"});",
+									"",
+									"pm.test('至少有3个订单', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.length).to.be.at.least(3);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/order/list?userId={{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "order", "list"],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						},
+						"description": "查询当前用户的订单列表-第2次"
+					},
+					"response": []
+				},
+				{
+					"name": "查询我的订单-第3次",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('响应状态码为200', function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('返回成功标志', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.code).to.eql(200);",
+									"});",
+									"",
+									"pm.test('订单包含订单号和状态', function() {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data.length > 0) {",
+									"        pm.expect(jsonData.data[0]).to.have.property('orderNo');",
+									"        pm.expect(jsonData.data[0]).to.have.property('statusDesc');",
+									"        pm.expect(jsonData.data[0]).to.have.property('totalAmount');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/order/list?userId={{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "order", "list"],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						},
+						"description": "查询当前用户的订单列表-第3次"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "04-库存模块(熔断测试)",
+			"item": [
+				{
+					"name": "查询库存",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('响应状态码为200', function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('返回成功标志', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.code).to.eql(200);",
+									"});",
+									"",
+									"pm.test('返回包含库存信息', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.have.property('productId');",
+									"    pm.expect(jsonData.data).to.have.property('stock');",
+									"    pm.expect(jsonData.data).to.have.property('version');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/inventory/get/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "inventory", "get", "1"]
+						},
+						"description": "查询商品1的库存信息"
+					},
+					"response": []
+				},
+				{
+					"name": "扣减库存",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('响应状态码为200', function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('返回成功标志', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.code).to.eql(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"productId\": 1,\n    \"quantity\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/inventory/deduct",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "inventory", "deduct"]
+						},
+						"description": "扣减商品1的库存"
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

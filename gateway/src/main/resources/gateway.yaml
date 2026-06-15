@@ -1,0 +1,24 @@
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+
+sentinel:
+  eager:
+    enabled: true
+  transport:
+    dashboard: localhost:8080
+  metrics:
+    enabled: true
+  filter:
+    enabled: true
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
