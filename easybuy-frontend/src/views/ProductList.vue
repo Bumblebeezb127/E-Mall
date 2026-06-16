@@ -186,15 +186,53 @@ onMounted(() => {
 }
 
 .product-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 20px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .product-card {
+  flex: 0 0 calc((100% - 60px) / 4);  /* 桌面 4 列: 3 个 gap = 60px */
+  max-width: calc((100% - 60px) / 4);
   border-radius: 12px;
   overflow: hidden;
   transition: transform 0.3s, box-shadow 0.3s;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1199px) {
+  .product-card {
+    flex: 0 0 calc((100% - 40px) / 3);
+    max-width: calc((100% - 40px) / 3);
+  }
+}
+
+@media (max-width: 900px) {
+  .product-card {
+    flex: 0 0 calc((100% - 20px) / 2);
+    max-width: calc((100% - 20px) / 2);
+  }
+}
+
+@media (max-width: 600px) {
+  .product-card {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
+
+.product-card :deep(.el-card) {
+  width: 100%;
+  border: none;
+}
+
+.product-card :deep(.el-card__body) {
+  padding: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .product-card:hover {
@@ -229,6 +267,8 @@ onMounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  word-break: break-all;
+  min-width: 0;
 }
 
 .product-desc {

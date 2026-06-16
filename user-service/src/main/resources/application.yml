@@ -16,8 +16,8 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/db_user?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
-    username: root
-    password: dflc72131
+    username: emall_app
+    password: Emall@2024
 
 jwt:
   secret: a8f5f167f44f4964e6c998dee827110c

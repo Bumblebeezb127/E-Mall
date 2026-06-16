@@ -43,6 +43,12 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
         log.info("Authenticating request - path: {}", path);
 
+        // CORS preflight requests should bypass auth
+        if (request.getMethod() == org.springframework.http.HttpMethod.OPTIONS) {
+            log.info("CORS preflight request, skipping authentication - path: {}", path);
+            return chain.filter(exchange);
+        }
+
         if (isWhiteListed(path)) {
             log.info("Path is whitelisted, skipping authentication - path: {}", path);
             return chain.filter(exchange);

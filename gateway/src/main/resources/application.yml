@@ -8,6 +8,7 @@ spring:
         namespace: public
         group: DEFAULT_GROUP
       config:
+        enabled: false
         server-addr: 127.0.0.1:8848
         file-extension: yaml
         namespace: public
@@ -15,11 +16,19 @@ spring:
         refresh-enabled: true
         import-check:
           enabled: false
-  gateway:
+    gateway:
       discovery:
         locator:
           enabled: true
           lower-case-service-id: true
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
       routes:
         - id: user-service
           uri: lb://user-service
@@ -54,7 +63,7 @@ jwt:
   expiration: 1800000
 
 server:
-  port: 8085
+  port: 9000
 
 management:
   endpoints:
@@ -64,3 +73,8 @@ management:
   endpoint:
     health:
       show-details: always
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
