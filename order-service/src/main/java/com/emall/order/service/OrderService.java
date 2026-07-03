@@ -10,4 +10,10 @@ public interface OrderService {
     OrderDetailResponse createOrder(CreateOrderRequest request);
 
     List<OrderDetailResponse> getOrdersByUserId(Long userId);
+
+    OrderDetailResponse getOrderDetail(Long orderId, Long userId);
+
+    OrderDetailResponse cancelOrder(Long orderId, Long userId);
+
+    OrderDetailResponse payOrder(Long orderId, Long userId);
 }

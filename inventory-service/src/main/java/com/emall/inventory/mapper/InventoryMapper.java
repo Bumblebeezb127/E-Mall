@@ -19,4 +19,9 @@ public interface InventoryMapper extends BaseMapper<Inventory> {
             "WHERE product_id = #{productId} AND stock >= #{quantity}")
     int deductStockWithPessimisticLock(@Param("productId") Long productId,
                                         @Param("quantity") Integer quantity);
+
+    @Update("UPDATE inventory SET stock = stock + #{quantity}, version = version + 1 " +
+            "WHERE product_id = #{productId}")
+    int restoreStock(@Param("productId") Long productId,
+                     @Param("quantity") Integer quantity);
 }

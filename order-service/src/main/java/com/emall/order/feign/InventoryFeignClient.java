@@ -12,4 +12,7 @@ public interface InventoryFeignClient {
 
     @PostMapping("/inventory/deduct")
     ResponseResult<Void> deduct(@RequestBody DeductRequest request);
+
+    @PostMapping("/inventory/restore")
+    ResponseResult<Void> restore(@RequestBody DeductRequest request);
 }

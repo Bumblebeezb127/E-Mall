@@ -25,5 +25,7 @@ public class OrderItem {
 
     private Integer quantity;
 
+    private BigDecimal subtotal;
+
     private LocalDateTime createdAt;
 }

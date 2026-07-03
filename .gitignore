@@ -70,3 +70,33 @@ easybuy-frontend/.env.*.local
 
 # IDE workspace caches
 *.lck
+
+# Project-specific: exclude runtime test/ dir (scripts are kept)
+# 与 src/ 对应的本地手动测试脚本目录 (项目无关)
+test/
+
+# Project-specific: include generated documentation
+# 保留 doc/ 下的 docx 文档 + images/ 配图, 排除生成它们的 Python 脚本
+# (脚本是开发工具, 不随仓库发布; 文档是最终交付物, 随仓库发布)
+doc/*.pyc
+doc/__pycache__/
+doc/generate_docs.py
+doc/generate_diagrams.py
+doc/*.tmp
+
+# Project-specific: exclude local Python caches from scripts/
+**/__pycache__/
+*.pyc
+*.pyo
+
+# Project-specific: exclude local build outputs in scripts
+scripts/*.tmp
+
+# Project-specific: exclude JMeter result files (output of running jmx)
+jmeter/results/
+jmeter/*.jtl
+jmeter/*.csv
+jmeter/html/
+
+# Project-specific: exclude local Spring Boot actuator dump files
+*.heapdump

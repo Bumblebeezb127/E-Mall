@@ -24,4 +24,6 @@ public class AddProductRequest {
     private String description;
 
     private String imageUrl;
+
+    private String category;
 }

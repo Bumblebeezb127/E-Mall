@@ -255,41 +255,42 @@ USE db_user;
 
 TRUNCATE TABLE `user`;
 
--- 密码统一为 123456 的 BCrypt 哈希: $2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy
--- 管理员密码 admin123 的 BCrypt 哈希:  $2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2
+-- 密码统一为 123456 的 BCrypt 哈希 (由本项目 BCryptPasswordEncoder 实时生成, 2026-06-15): $2a$10$FpZXnneElJLsbxwHHnTA/OoMsyHr999qPyv2AQmjhHAEsgEudK2Cy
+-- 管理员密码 admin123 的 BCrypt 哈希: $2a$10$qU5I2KEMHfMrzhnIsOeVc.IIB3xyL8To7OZ9bMEC.l2UJN9nJEzT6
+-- 注意: BCrypt 每次 encode() salt 不同, 但只要 PasswordEncoder.matches(raw, hashed) 验证通过即可
 INSERT INTO `user` (`id`, `username`, `password`, `nickname`, `email`, `phone`, `role`, `status`) VALUES
-(1,  'admin',    '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', '超级管理员', 'admin@emall.com',  '13800000000', 'ADMIN',    1),
-(2,  'merchant1','$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '华为旗舰店',  'merchant1@emall.com','13800000001', 'MERCHANT', 1),
-(3,  'merchant2','$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '苹果旗舰店',  'merchant2@emall.com','13800000002', 'MERCHANT', 1),
-(4,  'merchant3','$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '小米官方',    'merchant3@emall.com','13800000003', 'MERCHANT', 1),
-(5,  'user001',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '张三',        'user001@emall.com',  '13900000001', 'USER',     1),
-(6,  'user002',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '李四',        'user002@emall.com',  '13900000002', 'USER',     1),
-(7,  'user003',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '王五',        'user003@emall.com',  '13900000003', 'USER',     1),
-(8,  'user004',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '赵六',        'user004@emall.com',  '13900000004', 'USER',     1),
-(9,  'user005',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '钱七',        'user005@emall.com',  '13900000005', 'USER',     1),
-(10, 'user006',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '孙八',        'user006@emall.com',  '13900000006', 'USER',     1),
-(11, 'user007',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '周九',        'user007@emall.com',  '13900000007', 'USER',     1),
-(12, 'user008',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '吴十',        'user008@emall.com',  '13900000008', 'USER',     1),
-(13, 'user009',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '郑十一',      'user009@emall.com',  '13900000009', 'USER',     1),
-(14, 'user010',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '王十二',      'user010@emall.com',  '13900000010', 'USER',     1),
-(15, 'user011',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '李十三',      'user011@emall.com',  '13900000011', 'USER',     1),
-(16, 'user012',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '张十四',      'user012@emall.com',  '13900000012', 'USER',     1),
-(17, 'user013',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '刘十五',      'user013@emall.com',  '13900000013', 'USER',     1),
-(18, 'user014',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '陈十六',      'user014@emall.com',  '13900000014', 'USER',     1),
-(19, 'user015',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '杨十七',      'user015@emall.com',  '13900000015', 'USER',     1),
-(20, 'user016',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '黄十八',      'user016@emall.com',  '13900000016', 'USER',     1),
-(21, 'user017',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '周十九',      'user017@emall.com',  '13900000017', 'USER',     1),
-(22, 'user018',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '吴二十',      'user018@emall.com',  '13900000018', 'USER',     1),
-(23, 'user019',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '徐二十一',    'user019@emall.com',  '13900000019', 'USER',     1),
-(24, 'user020',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '孙二十二',    'user020@emall.com',  '13900000020', 'USER',     1),
-(25, 'user021',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '马二十三',    'user021@emall.com',  '13900000021', 'USER',     1),
-(26, 'user022',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '朱二十四',    'user022@emall.com',  '13900000022', 'USER',     1),
-(27, 'user023',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '胡二十五',    'user023@emall.com',  '13900000023', 'USER',     1),
-(28, 'user024',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '林二十六',    'user024@emall.com',  '13900000024', 'USER',     1),
-(29, 'user025',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '何二十七',    'user025@emall.com',  '13900000025', 'USER',     1),
-(30, 'user026',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '高二十八',    'user026@emall.com',  '13900000026', 'USER',     0),
-(31, 'user027',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '罗二十九',    'user027@emall.com',  '13900000027', 'USER',     1),
-(32, 'user028',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '梁三十',      'user028@emall.com',  '13900000028', 'USER',     1);
+(1,  'admin',    '$2a$10$qU5I2KEMHfMrzhnIsOeVc.IIB3xyL8To7OZ9bMEC.l2UJN9nJEzT6', '超级管理员', 'admin@emall.com',  '13800000000', 'ADMIN',    1),
+(2,  'merchant1','$2a$10$FpZXnneElJLsbxwHHnTA/OoMsyHr999qPyv2AQmjhHAEsgEudK2Cy', '华为旗舰店',  'merchant1@emall.com','13800000001', 'MERCHANT', 1),
+(3,  'merchant2','$2a$10$FpZXnneElJLsbxwHHnTA/OoMsyHr999qPyv2AQmjhHAEsgEudK2Cy', '苹果旗舰店',  'merchant2@emall.com','13800000002', 'MERCHANT', 1),
+(4,  'merchant3','$2a$10$FpZXnneElJLsbxwHHnTA/OoMsyHr999qPyv2AQmjhHAEsgEudK2Cy', '小米官方',    'merchant3@emall.com','13800000003', 'MERCHANT', 1),
+(5,  'user001',  '$2a$10$FpZXnneElJLsbxwHHnTA/OoMsyHr999qPyv2AQmjhHAEsgEudK2Cy', '张三',        'user001@emall.com',  '13900000001', 'USER',     1),
+(6,  'user002',  '$2a$10$FpZXnneElJLsbxwHHnTA/OoMsyHr999qPyv2AQmjhHAEsgEudK2Cy', '李四',        'user002@emall.com',  '13900000002', 'USER',     1),
+(7,  'user003',  '$2a$10$FpZXnneElJLsbxwHHnTA/OoMsyHr999qPyv2AQmjhHAEsgEudK2Cy', '王五',        'user003@emall.com',  '13900000003', 'USER',     1),
+(8,  'user004',  '$2a$10$FpZXnneElJLsbxwHHnTA/OoMsyHr999qPyv2AQmjhHAEsgEudK2Cy', '赵六',        'user004@emall.com',  '13900000004', 'USER',     1),
+(9,  'user005',  '$2a$10$FpZXnneElJLsbxwHHnTA/OoMsyHr999qPyv2AQmjhHAEsgEudK2Cy', '钱七',        'user005@emall.com',  '13900000005', 'USER',     1),
+(10, 'user006',  '$2a$10$FpZXnneElJLsbxwHHnTA/OoMsyHr999qPyv2AQmjhHAEsgEudK2Cy', '孙八',        'user006@emall.com',  '13900000006', 'USER',     1),
+(11, 'user007',  '$2a$10$FpZXnneElJLsbxwHHnTA/OoMsyHr999qPyv2AQmjhHAEsgEudK2Cy', '周九',        'user007@emall.com',  '13900000007', 'USER',     1),
+(12, 'user008',  '$2a$10$FpZXnneElJLsbxwHHnTA/OoMsyHr999qPyv2AQmjhHAEsgEudK2Cy', '吴十',        'user008@emall.com',  '13900000008', 'USER',     1),
+(13, 'user009',  '$2a$10$FpZXnneElJLsbxwHHnTA/OoMsyHr999qPyv2AQmjhHAEsgEudK2Cy', '郑十一',      'user009@emall.com',  '13900000009', 'USER',     1),
+(14, 'user010',  '$2a$10$FpZXnneElJLsbxwHHnTA/OoMsyHr999qPyv2AQmjhHAEsgEudK2Cy', '王十二',      'user010@emall.com',  '13900000010', 'USER',     1),
+(15, 'user011',  '$2a$10$FpZXnneElJLsbxwHHnTA/OoMsyHr999qPyv2AQmjhHAEsgEudK2Cy', '李十三',      'user011@emall.com',  '13900000011', 'USER',     1),
+(16, 'user012',  '$2a$10$FpZXnneElJLsbxwHHnTA/OoMsyHr999qPyv2AQmjhHAEsgEudK2Cy', '张十四',      'user012@emall.com',  '13900000012', 'USER',     1),
+(17, 'user013',  '$2a$10$FpZXnneElJLsbxwHHnTA/OoMsyHr999qPyv2AQmjhHAEsgEudK2Cy', '刘十五',      'user013@emall.com',  '13900000013', 'USER',     1),
+(18, 'user014',  '$2a$10$FpZXnneElJLsbxwHHnTA/OoMsyHr999qPyv2AQmjhHAEsgEudK2Cy', '陈十六',      'user014@emall.com',  '13900000014', 'USER',     1),
+(19, 'user015',  '$2a$10$FpZXnneElJLsbxwHHnTA/OoMsyHr999qPyv2AQmjhHAEsgEudK2Cy', '杨十七',      'user015@emall.com',  '13900000015', 'USER',     1),
+(20, 'user016',  '$2a$10$FpZXnneElJLsbxwHHnTA/OoMsyHr999qPyv2AQmjhHAEsgEudK2Cy', '黄十八',      'user016@emall.com',  '13900000016', 'USER',     1),
+(21, 'user017',  '$2a$10$FpZXnneElJLsbxwHHnTA/OoMsyHr999qPyv2AQmjhHAEsgEudK2Cy', '周十九',      'user017@emall.com',  '13900000017', 'USER',     1),
+(22, 'user018',  '$2a$10$FpZXnneElJLsbxwHHnTA/OoMsyHr999qPyv2AQmjhHAEsgEudK2Cy', '吴二十',      'user018@emall.com',  '13900000018', 'USER',     1),
+(23, 'user019',  '$2a$10$FpZXnneElJLsbxwHHnTA/OoMsyHr999qPyv2AQmjhHAEsgEudK2Cy', '徐二十一',    'user019@emall.com',  '13900000019', 'USER',     1),
+(24, 'user020',  '$2a$10$FpZXnneElJLsbxwHHnTA/OoMsyHr999qPyv2AQmjhHAEsgEudK2Cy', '孙二十二',    'user020@emall.com',  '13900000020', 'USER',     1),
+(25, 'user021',  '$2a$10$FpZXnneElJLsbxwHHnTA/OoMsyHr999qPyv2AQmjhHAEsgEudK2Cy', '马二十三',    'user021@emall.com',  '13900000021', 'USER',     1),
+(26, 'user022',  '$2a$10$FpZXnneElJLsbxwHHnTA/OoMsyHr999qPyv2AQmjhHAEsgEudK2Cy', '朱二十四',    'user022@emall.com',  '13900000022', 'USER',     1),
+(27, 'user023',  '$2a$10$FpZXnneElJLsbxwHHnTA/OoMsyHr999qPyv2AQmjhHAEsgEudK2Cy', '胡二十五',    'user023@emall.com',  '13900000023', 'USER',     1),
+(28, 'user024',  '$2a$10$FpZXnneElJLsbxwHHnTA/OoMsyHr999qPyv2AQmjhHAEsgEudK2Cy', '林二十六',    'user024@emall.com',  '13900000024', 'USER',     1),
+(29, 'user025',  '$2a$10$FpZXnneElJLsbxwHHnTA/OoMsyHr999qPyv2AQmjhHAEsgEudK2Cy', '何二十七',    'user025@emall.com',  '13900000025', 'USER',     1),
+(30, 'user026',  '$2a$10$FpZXnneElJLsbxwHHnTA/OoMsyHr999qPyv2AQmjhHAEsgEudK2Cy', '高二十八',    'user026@emall.com',  '13900000026', 'USER',     0),
+(31, 'user027',  '$2a$10$FpZXnneElJLsbxwHHnTA/OoMsyHr999qPyv2AQmjhHAEsgEudK2Cy', '罗二十九',    'user027@emall.com',  '13900000027', 'USER',     1),
+(32, 'user028',  '$2a$10$FpZXnneElJLsbxwHHnTA/OoMsyHr999qPyv2AQmjhHAEsgEudK2Cy', '梁三十',      'user028@emall.com',  '13900000028', 'USER',     1);
 
 -- ---------- 4.3 库存数据 (20 条) ----------
 USE db_inventory;

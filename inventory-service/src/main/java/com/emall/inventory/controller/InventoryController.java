@@ -24,6 +24,12 @@ public class InventoryController {
         return ResponseResult.success("Inventory deducted successfully", null);
     }
 
+    @PostMapping("/restore")
+    public ResponseResult<Void> restore(@Valid @RequestBody DeductRequest request) {
+        inventoryService.restoreStock(request.getProductId(), request.getQuantity());
+        return ResponseResult.success("Inventory restored successfully", null);
+    }
+
     @GetMapping("/get/{productId}")
     public ResponseResult<InventoryResponse> getInventory(@PathVariable Long productId) {
         InventoryResponse inventory = inventoryService.getInventory(productId);

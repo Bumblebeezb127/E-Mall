@@ -15,3 +15,27 @@ export const getOrderList = (params) => {
     params
   })
 }
+
+export const getOrderDetail = (orderId, userId) => {
+  return request({
+    url: `/api/order/detail/${orderId}`,
+    method: 'GET',
+    params: { userId }
+  })
+}
+
+export const cancelOrder = (orderId, userId) => {
+  return request({
+    url: `/api/order/cancel/${orderId}`,
+    method: 'PUT',
+    params: { userId }
+  })
+}
+
+export const payOrder = (orderId, userId) => {
+  return request({
+    url: `/api/order/pay/${orderId}`,
+    method: 'PUT',
+    params: { userId }
+  })
+}

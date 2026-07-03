@@ -1,16 +1,18 @@
 <template>
   <div class="order-create-container">
     <el-container>
-      <el-header>
-        <div class="header-content">
-          <h2>创建订单</h2>
-          <el-button type="text" @click="goBack" style="color: white">
-            <el-icon><ArrowLeft /></el-icon>
-            返回商品列表
-          </el-button>
-        </div>
-      </el-header>
-      <el-main>
+      <SideNav />
+      <el-container>
+        <el-header>
+          <div class="header-content">
+            <h2>创建订单</h2>
+            <el-button type="text" @click="goBack">
+              <el-icon><ArrowLeft /></el-icon>
+              返回商品列表
+            </el-button>
+          </div>
+        </el-header>
+        <el-main>
         <el-card class="order-card" v-loading="loading">
           <template #header>
             <div class="card-header">
@@ -22,7 +24,11 @@
             <el-row :gutter="20">
               <el-col :span="8">
                 <div class="product-image">
-                  <img :src="productInfo.imageUrl || '/placeholder.png'" :alt="productInfo.name" />
+                  <img
+                    :src="productInfo.imageUrl || '/placeholder.svg'"
+                    :alt="productInfo.name"
+                    @error="onImgError($event)"
+                  />
                 </div>
               </el-col>
               <el-col :span="16">
@@ -30,8 +36,10 @@
                   <h3>{{ productInfo.name }}</h3>
                   <p class="description">{{ productInfo.description || '暂无描述' }}</p>
                   <div class="price-stock">
-                    <span class="price">¥{{ productInfo.price }}</span>
-                    <span class="stock">库存: {{ productInfo.maxStock }}</span>
+                    <span class="price">¥{{ formatPrice(productInfo.price) }}</span>
+                    <span class="stock" :class="{ 'low-stock': (productInfo.maxStock || 0) <= 5 }">
+                      库存: {{ productInfo.maxStock || 0 }}
+                    </span>
                   </div>
                 </div>
               </el-col>
@@ -41,7 +49,7 @@
           <el-divider />
 
           <el-form :model="orderForm" :rules="rules" ref="formRef" label-width="100px">
-            <el-form-item label="购买数量">
+            <el-form-item label="购买数量" prop="quantity">
               <el-input-number
                 v-model="orderForm.quantity"
                 :min="1"
@@ -52,7 +60,7 @@
               <span class="stock-tip">当前库存: {{ productInfo?.maxStock || 0 }}</span>
             </el-form-item>
 
-            <el-form-item label="收货地址">
+            <el-form-item label="收货地址" prop="address">
               <el-input
                 v-model="orderForm.address"
                 type="textarea"
@@ -80,7 +88,7 @@
           <div class="order-summary">
             <div class="summary-row">
               <span>商品金额:</span>
-              <span>¥{{ productInfo?.price || 0 }}</span>
+              <span>¥{{ formatPrice(productInfo?.price) }}</span>
             </div>
             <div class="summary-row">
               <span>购买数量:</span>
@@ -93,7 +101,7 @@
             <el-divider style="margin: 15px 0" />
             <div class="summary-row total">
               <span>应付总额:</span>
-              <span class="total-price">¥{{ totalAmount.toFixed(2) }}</span>
+              <span class="total-price">¥{{ formatPrice(totalAmount) }}</span>
             </div>
           </div>
 
@@ -103,6 +111,7 @@
               type="primary"
               size="large"
               :loading="submitting"
+              :disabled="!canSubmit"
               @click="handleSubmit"
             >
               提交订单
@@ -129,6 +138,7 @@
           </template>
         </el-dialog>
       </el-main>
+      </el-container>
     </el-container>
   </div>
 </template>
@@ -137,8 +147,11 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { ArrowLeft } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/userStore'
+import { getProductDetail } from '@/api/product'
 import { createOrder } from '@/api/order'
+import SideNav from '@/components/SideNav.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -159,6 +172,9 @@ const orderForm = reactive({
 })
 
 const rules = {
+  quantity: [
+    { required: true, message: '请选择购买数量', trigger: 'change' }
+  ],
   address: [
     { required: true, message: '请输入收货地址', trigger: 'blur' },
     { min: 5, max: 200, message: '地址长度在5-200个字符', trigger: 'blur' }
@@ -167,33 +183,86 @@ const rules = {
 
 const totalAmount = computed(() => {
   if (productInfo.value) {
-    return parseFloat(productInfo.value.price) * orderForm.quantity
+    return parseFloat(productInfo.value.price || 0) * orderForm.quantity
   }
   return 0
 })
 
-const calculateTotal = () => {
+const canSubmit = computed(() => {
+  // 只做基础存在性检查, 具体校验交给 form rules 和 handleSubmit
+  return !!productInfo.value
+    && productInfo.value.id != null
+    && orderForm.quantity > 0
+    && !submitting.value
+})
+
+function formatPrice(p) {
+  return parseFloat(p || 0).toFixed(2)
 }
+
+function onImgError(e) {
+  // 图片加载失败时使用内联 SVG 占位
+  if (e.target && !e.target.dataset.fallback) {
+    e.target.dataset.fallback = '1'
+    const w = e.target.clientWidth || 200
+    const h = e.target.clientHeight || 200
+    const text = (productInfo.value?.name || '商品').slice(0, 4)
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${w} ${h}'>
+      <rect width='100%' height='100%' fill='#f0f2f5'/>
+      <text x='50%' y='50%' text-anchor='middle' dy='.3em'
+            font-size='20' fill='#909399' font-family='sans-serif'>${text}</text>
+    </svg>`
+    e.target.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(svg)
+  }
+}
+
+const calculateTotal = () => {}
 
 const handleSubmit = async () => {
   if (!formRef.value) return
 
+  // 安全获取 userId (JWT payload 兜底)
+  const userId = userStore.userId || userStore.userInfo?.id
+  if (!userId) {
+    ElMessage.error('用户身份信息缺失, 请重新登录')
+    userStore.clearAuth()
+    router.push({ path: '/login', query: { redirect: route.fullPath } })
+    return
+  }
+
+  // 校验 productId
+  const productId = parseInt(productInfo.value?.id)
+  if (!productId || isNaN(productId)) {
+    ElMessage.error('商品信息异常, 请返回重试')
+    return
+  }
+
+  // 校验库存
+  if (orderForm.quantity > (productInfo.value.maxStock || 0)) {
+    ElMessage.error('购买数量超过库存')
+    return
+  }
+
   await formRef.value.validate(async (valid) => {
-    if (valid) {
-      submitting.value = true
-      try {
-        const res = await createOrder({
-          userId: userStore.userInfo.id,
-          productId: parseInt(productInfo.value.id),
-          quantity: orderForm.quantity
-        })
-        createdOrderNo.value = res.data?.orderNo || res.data?.id || '生成成功'
-        successDialogVisible.value = true
-      } catch (error) {
-        ElMessage.error(error.message || '提交订单失败')
-      } finally {
-        submitting.value = false
-      }
+    if (!valid) return
+    submitting.value = true
+    try {
+      const res = await createOrder({
+        userId: userId,
+        productId: productId,
+        quantity: orderForm.quantity,
+        address: orderForm.address,
+        remark: orderForm.remark || ''
+      })
+      // 兼容不同返回层级
+      const orderNo = res?.data?.orderNo || res?.orderNo || res?.data?.id || '生成成功'
+      createdOrderNo.value = orderNo
+      successDialogVisible.value = true
+    } catch (error) {
+      const msg = error?.response?.data?.message || error.message || '提交订单失败'
+      ElMessage.error(msg)
+    } finally {
+      submitting.value = false
     }
   })
 }
@@ -212,10 +281,18 @@ const goToProducts = () => {
   router.push('/products')
 }
 
-onMounted(() => {
+async function loadProductFromQuery() {
+  // 优先使用 query 中的快速数据
   if (route.query.productId) {
+    const productId = parseInt(route.query.productId)
+    if (!productId || isNaN(productId)) {
+      ElMessage.warning('商品信息不存在')
+      goBack()
+      return
+    }
+
     productInfo.value = {
-      id: route.query.productId,
+      id: productId,
       name: route.query.productName || '商品',
       price: parseFloat(route.query.price) || 0,
       maxStock: parseInt(route.query.maxStock) || 0,
@@ -223,10 +300,37 @@ onMounted(() => {
       description: route.query.description || ''
     }
     orderForm.quantity = 1
+
+    // 异步从 API 拉取最新数据, 避免使用过期快照
+    try {
+      const res = await getProductDetail(productId)
+      if (res?.data) {
+        const p = res.data
+        // 查询最新库存 (直接调 inventory service 会触发鉴权, 这里用 product 的 stock 字段作为展示)
+        productInfo.value = {
+          id: p.id,
+          name: p.name,
+          price: p.price,
+          maxStock: p.stock || productInfo.value.maxStock,
+          imageUrl: p.imageUrl,
+          description: p.description
+        }
+        if ((p.stock || 0) <= 0) {
+          ElMessage.warning('该商品暂时缺货, 无法下单')
+        }
+      }
+    } catch (e) {
+      // 拉取最新数据失败, 继续使用 query 数据
+      console.warn('加载商品详情失败:', e?.message)
+    }
   } else {
     ElMessage.warning('商品信息不存在')
     goBack()
   }
+}
+
+onMounted(async () => {
+  await loadProductFromQuery()
 })
 </script>
 
@@ -237,27 +341,31 @@ onMounted(() => {
 }
 
 .el-header {
-  background: linear-gradient(135deg, #409eff 0%, #66b1ff 100%);
-  color: white;
-  line-height: 60px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: white;
+  border-bottom: 1px solid #ebeef5;
+  height: 64px;
+  line-height: 64px;
+  padding: 0 24px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
 }
 
 .header-content {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .header-content h2 {
   margin: 0;
+  font-size: 20px;
   font-weight: 600;
+  color: #303133;
+  line-height: 64px;
 }
 
 .el-main {
-  max-width: 900px;
-  margin: 30px auto;
-  padding: 0 20px;
+  padding: 24px;
 }
 
 .order-card {
@@ -274,19 +382,21 @@ onMounted(() => {
 }
 
 .product-image {
-  height: 200px;
+  width: 100%;
+  height: 220px;
   background-color: #f0f2f5;
   border-radius: 8px;
   overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
+  position: relative;
 }
 
 .product-image img {
-  max-width: 100%;
-  max-height: 100%;
+  display: block;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
+  object-position: center;
 }
 
 .product-info h3 {
@@ -316,6 +426,11 @@ onMounted(() => {
 .stock {
   color: #909399;
   font-size: 14px;
+}
+
+.stock.low-stock {
+  color: #e6a23c;
+  font-weight: 600;
 }
 
 .stock-tip {

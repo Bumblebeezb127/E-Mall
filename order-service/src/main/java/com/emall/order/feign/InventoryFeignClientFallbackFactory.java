@@ -23,6 +23,13 @@ public class InventoryFeignClientFallbackFactory implements FallbackFactory<Inve
                         request.getProductId(), request.getQuantity());
                 return ResponseResult.fail(503, "库存服务繁忙，请稍后重试");
             }
+
+            @Override
+            public ResponseResult<Void> restore(DeductRequest request) {
+                log.error("Inventory service unavailable during restore. ProductId: {}, Quantity: {}",
+                        request.getProductId(), request.getQuantity());
+                return ResponseResult.fail(503, "库存服务不可用，回滚失败，请联系客服");
+            }
         };
     }
 }

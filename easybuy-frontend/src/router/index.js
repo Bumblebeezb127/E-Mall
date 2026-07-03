@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useUserStore } from '@/stores/userStore'
 
 const routes = [
   {
@@ -49,22 +50,30 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from, next) => {
-  const token = localStorage.getItem('token')
+  const userStore = useUserStore()
+  const token = userStore.token
   const requiresAuth = to.meta.requiresAuth
 
-  if (requiresAuth && !token) {
-    next({
-      path: '/login',
-      query: { redirect: to.fullPath }
-    })
-    return
+  // 1. 主动检查 token 是否过期 (避免带着过期 token 访问受保护页面)
+  if (token && userStore.isTokenExpired()) {
+    userStore.clearAuth()
+    ElMessage?.warning?.('登录已过期，请重新登录')
+    if (to.path !== '/login') {
+      return next({ path: '/login', query: { redirect: to.fullPath } })
+    }
   }
 
-  if ((to.path === '/login' || to.path === '/register') && token) {
-    next('/products')
-    return
+  // 2. 需要登录但没有 token (或 token 刚被清除)
+  if (requiresAuth && !userStore.token) {
+    return next({ path: '/login', query: { redirect: to.fullPath } })
   }
 
+  // 3. 已登录访问 /login 或 /register
+  if ((to.path === '/login' || to.path === '/register') && userStore.token) {
+    return next('/products')
+  }
+
+  // 4. 设置页面标题
   if (to.meta.title) {
     document.title = `${to.meta.title} - 易购商城`
   }

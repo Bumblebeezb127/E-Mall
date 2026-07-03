@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
-@TableName("orders")
+@TableName("`order`")
 public class Order {
 
     @TableId(type = IdType.AUTO)
@@ -22,6 +22,10 @@ public class Order {
     private BigDecimal totalAmount;
 
     private Integer status;
+
+    private String address;
+
+    private String remark;
 
     private LocalDateTime createdAt;
 

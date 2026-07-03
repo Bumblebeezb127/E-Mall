@@ -59,6 +59,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         LoginResponse response = new LoginResponse();
         response.setToken(token);
         response.setExpiresIn(jwtUtil.getExpiration() / 1000);
+        // 同步返回用户基础信息, 前端无需再请求 /info
+        response.setId(user.getId());
+        response.setUsername(user.getUsername());
 
         return response;
     }

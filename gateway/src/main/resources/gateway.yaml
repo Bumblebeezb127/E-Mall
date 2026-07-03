@@ -10,7 +10,7 @@ sentinel:
   eager:
     enabled: true
   transport:
-    dashboard: localhost:8080
+    dashboard: localhost:8858
   metrics:
     enabled: true
   filter:

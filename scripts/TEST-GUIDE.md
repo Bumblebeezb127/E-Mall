@@ -22,7 +22,7 @@
 
 | 服务 | 端口 | 验证方式 |
 |------|------|----------|
-| gateway | 8080 | `curl http://localhost:8080/actuator/health` |
+| gateway | 9000 | `curl http://localhost:9000/actuator/health` |
 | user-service | 8081 | `curl http://localhost:8081/actuator/health` |
 | product-service | 8082 | `curl http://localhost:8082/actuator/health` |
 | order-service | 8083 | `curl http://localhost:8083/actuator/health` |
@@ -30,7 +30,7 @@
 
 ```bash
 # 验证所有服务健康
-curl http://localhost:8080/actuator/health
+curl http://localhost:9000/actuator/health
 ```
 
 #### STEP 2: 正常调用创建订单接口
@@ -38,7 +38,7 @@ curl http://localhost:8080/actuator/health
 获取 Token：
 
 ```bash
-curl -X POST http://localhost:8080/api/user/login ^
+curl -X POST http://localhost:9000/api/user/login ^
      -H "Content-Type: application/json" ^
      -d "{\"username\":\"loadtest\",\"password\":\"password123\"}"
 ```
@@ -51,7 +51,7 @@ curl -X POST http://localhost:8080/api/user/login ^
 创建订单（正常情况）：
 
 ```bash
-curl -X POST http://localhost:8080/api/order/create ^
+curl -X POST http://localhost:9000/api/order/create ^
      -H "Content-Type: application/json" ^
      -H "Authorization: Bearer <YOUR_TOKEN>" ^
      -d "{\"userId\":1,\"productId\":1,\"quantity\":1}"
@@ -83,7 +83,7 @@ docker stop inventory-service-container
 #### STEP 4: 连续调用10次，观察降级响应
 
 ```bash
-for /L %i in (1,1,10) do @echo === 第 %i 次 === && curl -s -X POST http://localhost:8080/api/order/create -H "Content-Type: application/json" -H "Authorization: Bearer <TOKEN>" -d "{\"userId\":1,\"productId\":1,\"quantity\":1}" && timeout /t 1 /nobreak > nul
+for /L %i in (1,1,10) do @echo === 第 %i 次 === && curl -s -X POST http://localhost:9000/api/order/create -H "Content-Type: application/json" -H "Authorization: Bearer <TOKEN>" -d "{\"userId\":1,\"productId\":1,\"quantity\":1}" && timeout /t 1 /nobreak > nul
 ```
 
 **期望的降级响应示例**：
@@ -106,7 +106,7 @@ for /L %i in (1,1,10) do @echo === 第 %i 次 === && curl -s -X POST http://loca
 
 #### STEP 5: 验证 Sentinel 控制台
 
-1. 访问 Sentinel Dashboard：`http://localhost:8080` 或 `http://localhost:8858`
+1. 访问 Sentinel Dashboard：`http://localhost:9000` 或 `http://localhost:8858`
 2. 进入 **熔断规则** 或 **实时监控**
 3. 查看 `inventory-service` 或 `createOrder` 资源
 4. 确认熔断器状态为 **OPEN**
@@ -135,7 +135,7 @@ timeout /t 10 /nobreak
 **再次调用订单接口**：
 
 ```bash
-curl -X POST http://localhost:8080/api/order/create ^
+curl -X POST http://localhost:9000/api/order/create ^
      -H "Content-Type: application/json" ^
      -H "Authorization: Bearer <TOKEN>" ^
      -d "{\"userId\":1,\"productId\":1,\"quantity\":1}"
@@ -158,7 +158,7 @@ curl -X POST http://localhost:8080/api/order/create ^
 调用商品列表接口，记录当前每页返回的记录数：
 
 ```bash
-curl -s "http://localhost:8080/api/product/list?page=1&size=10"
+curl -s "http://localhost:9000/api/product/list?page=1&size=10"
 ```
 
 响应示例：
@@ -213,13 +213,13 @@ timeout /t 3 /nobreak
 **调用商品列表接口**：
 
 ```bash
-curl -s "http://localhost:8080/api/product/list?page=1&size=20"
+curl -s "http://localhost:9000/api/product/list?page=1&size=20"
 ```
 
 或调用默认分页：
 
 ```bash
-curl -s "http://localhost:8080/api/product/list?page=1"
+curl -s "http://localhost:9000/api/product/list?page=1"
 ```
 
 **期望结果**：每页返回的记录数变为 20 条
@@ -241,7 +241,7 @@ page:
 4. **验证**：
 
 ```bash
-curl -s "http://localhost:8080/api/product/list?page=1"
+curl -s "http://localhost:9000/api/product/list?page=1"
 ```
 
 **期望结果**：每页返回5条记录
@@ -304,41 +304,41 @@ scripts\test-scenarios.bat
 
 ```bash
 # 1. 获取Token
-curl -X POST http://localhost:8080/api/user/login -H "Content-Type: application/json" -d "{\"username\":\"loadtest\",\"password\":\"password123\"}"
+curl -X POST http://localhost:9000/api/user/login -H "Content-Type: application/json" -d "{\"username\":\"loadtest\",\"password\":\"password123\"}"
 
 # 2. 正常调用（服务正常时）
-curl -X POST http://localhost:8080/api/order/create -H "Content-Type: application/json" -H "Authorization: Bearer <TOKEN>" -d "{\"userId\":1,\"productId\":1,\"quantity\":1}"
+curl -X POST http://localhost:9000/api/order/create -H "Content-Type: application/json" -H "Authorization: Bearer <TOKEN>" -d "{\"userId\":1,\"productId\":1,\"quantity\":1}"
 
 # 3. 停止inventory-service
 netstat -ano | findstr ":8084"
 taskkill /F /PID <PID>
 
 # 4. 降级测试（服务停止后）
-for /L %i in (1,1,10) do @curl -X POST http://localhost:8080/api/order/create -H "Content-Type: application/json" -H "Authorization: Bearer <TOKEN>" -d "{\"userId\":1,\"productId\":1,\"quantity\":1}"
+for /L %i in (1,1,10) do @curl -X POST http://localhost:9000/api/order/create -H "Content-Type: application/json" -H "Authorization: Bearer <TOKEN>" -d "{\"userId\":1,\"productId\":1,\"quantity\":1}"
 
 # 5. 验证Sentinel控制台
 # 访问 http://localhost:8858 (或配置的Sentinel端口)
 
 # 6. 重启后验证
 java -jar inventory-service.jar
-curl -X POST http://localhost:8080/api/order/create ...
+curl -X POST http://localhost:9000/api/order/create ...
 ```
 
 ### 配置热更新测试
 
 ```bash
 # 1. 验证当前配置
-curl -s "http://localhost:8080/api/product/list?page=1&size=10" | findstr /C:"id"
+curl -s "http://localhost:9000/api/product/list?page=1&size=10" | findstr /C:"id"
 
 # 2. Nacos控制台修改 page.size=20
 
 # 3. 验证热更新
-curl -s "http://localhost:8080/api/product/list?page=1&size=20" | findstr /C:"id"
+curl -s "http://localhost:9000/api/product/list?page=1&size=20" | findstr /C:"id"
 
 # 4. Nacos控制台修改 page.size=5
 
 # 5. 再次验证
-curl -s "http://localhost:8080/api/product/list?page=1&size=5" | findstr /C:"id"
+curl -s "http://localhost:9000/api/product/list?page=1&size=5" | findstr /C:"id"
 ```
 
 ---

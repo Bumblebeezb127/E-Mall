@@ -28,13 +28,16 @@ public class ProductController {
     @GetMapping("/list")
     public ResponseResult<PageResult<Product>> getProductList(
             @RequestParam(defaultValue = "1") @Positive int page,
-            @RequestParam(defaultValue = "10") @Positive int size) {
+            @RequestParam(required = false) Integer size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String category) {
 
-        if (size > pageConfig.getMaxSize()) {
-            size = pageConfig.getMaxSize();
+        int actualSize = (size == null || size <= 0) ? pageConfig.getDefaultSize() : size;
+        if (actualSize > pageConfig.getMaxSize()) {
+            actualSize = pageConfig.getMaxSize();
         }
 
-        Page<Product> productPage = productService.getProductPage(page, size);
+        Page<Product> productPage = productService.getProductPage(page, actualSize, keyword, category);
 
         PageResult<Product> pageResult = new PageResult<>(
                 productPage.getRecords(),
@@ -57,5 +60,13 @@ public class ProductController {
     public ResponseResult<Void> addProduct(@Valid @RequestBody AddProductRequest request) {
         productService.addProduct(request);
         return ResponseResult.success("Product added successfully", null);
+    }
+
+    @PutMapping("/stock/update")
+    public ResponseResult<Void> updateStock(
+            @RequestParam Long productId,
+            @RequestParam Integer delta) {
+        productService.updateStock(productId, delta);
+        return ResponseResult.success("Product stock updated", null);
     }
 }

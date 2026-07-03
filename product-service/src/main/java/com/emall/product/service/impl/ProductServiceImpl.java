@@ -9,6 +9,7 @@ import com.emall.product.exception.BusinessException;
 import com.emall.product.mapper.ProductMapper;
 import com.emall.product.service.ProductService;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 @Service
 public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> implements ProductService {
@@ -16,9 +17,15 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     private static final int STATUS_ACTIVE = 1;
 
     @Override
-    public Page<Product> getProductPage(int page, int size) {
+    public Page<Product> getProductPage(int page, int size, String keyword, String category) {
         LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Product::getStatus, STATUS_ACTIVE);
+        if (StringUtils.hasText(keyword)) {
+            wrapper.like(Product::getName, keyword);
+        }
+        if (StringUtils.hasText(category)) {
+            wrapper.eq(Product::getCategory, category);
+        }
         wrapper.orderByDesc(Product::getId);
 
         Page<Product> productPage = new Page<>(page, size);
@@ -31,9 +38,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         if (product == null) {
             throw new BusinessException("Product not found");
         }
-        if (product.getStatus() != STATUS_ACTIVE) {
-            throw new BusinessException("Product is not available");
-        }
+        // 在 getProductById 中允许返回商品详情包括下架的, 以便订单服务创建订单时仍可查到
         return product;
     }
 
@@ -45,8 +50,23 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         product.setStock(request.getStock());
         product.setDescription(request.getDescription());
         product.setImageUrl(request.getImageUrl());
+        product.setCategory(request.getCategory());
         product.setStatus(STATUS_ACTIVE);
 
         this.save(product);
+    }
+
+    @Override
+    public void updateStock(Long productId, Integer delta) {
+        Product product = this.getById(productId);
+        if (product == null) {
+            throw new BusinessException("Product not found");
+        }
+        int newStock = product.getStock() + delta;
+        if (newStock < 0) {
+            throw new BusinessException("Stock cannot be negative");
+        }
+        product.setStock(newStock);
+        this.updateById(product);
     }
 }

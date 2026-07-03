@@ -4,32 +4,42 @@ import { login as loginApi, register as registerApi, getUserInfo as getUserInfoA
 const TOKEN_KEY = 'token'
 const USER_INFO_KEY = 'userInfo'
 
+function safeParse(json, fallback) {
+  try {
+    return json ? JSON.parse(json) : fallback
+  } catch {
+    return fallback
+  }
+}
+
 export const useUserStore = defineStore('user', {
   state: () => ({
     token: localStorage.getItem(TOKEN_KEY) || '',
-    userInfo: JSON.parse(localStorage.getItem(USER_INFO_KEY) || '{}')
+    userInfo: safeParse(localStorage.getItem(USER_INFO_KEY), {})
   }),
 
   getters: {
     isLoggedIn: (state) => !!state.token,
 
-    userId: (state) => state.userInfo?.id || null,
+    userId: (state) => {
+      if (state.userInfo?.id) return state.userInfo.id
+      return null
+    },
 
-    username: (state) => state.userInfo?.username || ''
+    username: (state) => state.userInfo?.username || '',
+
+    // 综合判断登录态: 有 token 且未过期
+    isAuthValid: (state) => {
+      if (!state.token) return false
+      return !isTokenExpired(state.token)
+    }
   },
 
   actions: {
     initFromStorage() {
       this.token = localStorage.getItem(TOKEN_KEY) || ''
       const storedUserInfo = localStorage.getItem(USER_INFO_KEY)
-      if (storedUserInfo) {
-        try {
-          this.userInfo = JSON.parse(storedUserInfo)
-        } catch (e) {
-          this.userInfo = {}
-          localStorage.removeItem(USER_INFO_KEY)
-        }
-      }
+      this.userInfo = safeParse(storedUserInfo, {})
     },
 
     setToken(token) {
@@ -38,8 +48,8 @@ export const useUserStore = defineStore('user', {
     },
 
     setUserInfo(userInfo) {
-      this.userInfo = userInfo
-      localStorage.setItem(USER_INFO_KEY, JSON.stringify(userInfo))
+      this.userInfo = userInfo || {}
+      localStorage.setItem(USER_INFO_KEY, JSON.stringify(this.userInfo))
     },
 
     async login(username, password) {
@@ -48,7 +58,12 @@ export const useUserStore = defineStore('user', {
 
         if (res.data && res.data.token) {
           this.setToken(res.data.token)
-          this.setUserInfo(res.data)
+          this.setUserInfo({
+            id: res.data.id,
+            username: res.data.username,
+            token: res.data.token,
+            expiresIn: res.data.expiresIn
+          })
         }
 
         return res
@@ -71,7 +86,7 @@ export const useUserStore = defineStore('user', {
       try {
         const res = await getUserInfoApi()
         if (res.data) {
-          this.setUserInfo(res.data)
+          this.setUserInfo({ ...this.userInfo, ...res.data })
         }
         return res
       } catch (error) {
@@ -93,37 +108,42 @@ export const useUserStore = defineStore('user', {
       localStorage.removeItem(USER_INFO_KEY)
     },
 
+    // 检查 token 是否过期 (未过期返回 false, 已过期或无效返回 true)
     isTokenExpired() {
-      if (!this.token) return true
-
-      try {
-        const payload = this.parseJwtPayload(this.token)
-        if (!payload || !payload.exp) return false
-
-        const now = Math.floor(Date.now() / 1000)
-        return payload.exp < now
-      } catch {
-        return true
-      }
+      return isTokenExpired(this.token)
     },
 
     parseJwtPayload(token) {
-      try {
-        const base64Url = token.split('.')[1]
-        if (!base64Url) return null
-
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
-        const jsonPayload = decodeURIComponent(
-          atob(base64)
-            .split('')
-            .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-            .join('')
-        )
-
-        return JSON.parse(jsonPayload)
-      } catch {
-        return null
-      }
+      return parseJwtPayload(token)
     }
   }
 })
+
+// --- 工具函数 ---
+
+function parseJwtPayload(token) {
+  if (!token) return null
+  try {
+    const base64Url = token.split('.')[1]
+    if (!base64Url) return null
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    )
+    return JSON.parse(jsonPayload)
+  } catch {
+    return null
+  }
+}
+
+function isTokenExpired(token) {
+  if (!token) return true
+  const payload = parseJwtPayload(token)
+  if (!payload || !payload.exp) return true
+  const now = Math.floor(Date.now() / 1000)
+  // 提前 30 秒视为过期, 避免临界点
+  return payload.exp - 30 < now
+}

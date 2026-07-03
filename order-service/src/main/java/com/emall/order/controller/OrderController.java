@@ -30,4 +30,28 @@ public class OrderController {
         List<OrderDetailResponse> orders = orderService.getOrdersByUserId(userId);
         return ResponseResult.success(orders);
     }
+
+    @GetMapping("/detail/{orderId}")
+    public ResponseResult<OrderDetailResponse> getOrderDetail(
+            @PathVariable Long orderId,
+            @RequestParam Long userId) {
+        OrderDetailResponse order = orderService.getOrderDetail(orderId, userId);
+        return ResponseResult.success(order);
+    }
+
+    @PutMapping("/cancel/{orderId}")
+    public ResponseResult<OrderDetailResponse> cancelOrder(
+            @PathVariable Long orderId,
+            @RequestParam Long userId) {
+        OrderDetailResponse order = orderService.cancelOrder(orderId, userId);
+        return ResponseResult.success("Order cancelled", order);
+    }
+
+    @PutMapping("/pay/{orderId}")
+    public ResponseResult<OrderDetailResponse> payOrder(
+            @PathVariable Long orderId,
+            @RequestParam Long userId) {
+        OrderDetailResponse order = orderService.payOrder(orderId, userId);
+        return ResponseResult.success("Order paid", order);
+    }
 }

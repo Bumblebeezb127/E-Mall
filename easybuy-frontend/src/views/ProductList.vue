@@ -1,71 +1,83 @@
 <template>
   <div class="product-list-container">
     <el-container>
-      <el-header>
-        <div class="header-content">
-          <h2>商品列表</h2>
-          <div class="user-info">
-            <span>欢迎，{{ userStore.userInfo.username }}</span>
-            <el-button type="primary" size="small" @click="goToOrders">我的订单</el-button>
-            <el-button type="danger" size="small" @click="handleLogout">退出</el-button>
+      <SideNav />
+      <el-container>
+        <el-header>
+          <div class="header-content">
+            <h2>商品列表</h2>
+            <span class="header-subtitle">浏览所有商品并下单</span>
           </div>
-        </div>
-      </el-header>
-      <el-main>
-        <div class="search-bar">
-          <el-input
-            v-model="searchKeyword"
-            placeholder="搜索商品名称"
-            style="width: 300px"
-            clearable
-            @clear="fetchProducts"
-            @keyup.enter="fetchProducts"
-          >
-            <template #append>
-              <el-button icon="Search" @click="fetchProducts" />
-            </template>
-          </el-input>
-        </div>
+        </el-header>
+        <el-main>
+          <div class="search-bar">
+            <el-input
+              v-model="searchKeyword"
+              placeholder="搜索商品名称"
+              style="width: 300px"
+              clearable
+              @clear="fetchProducts"
+              @keyup.enter="fetchProducts"
+            >
+              <template #append>
+                <el-button icon="Search" @click="fetchProducts" />
+              </template>
+            </el-input>
+          </div>
 
-        <div class="product-grid" v-loading="loading">
-          <el-card
-            v-for="product in products"
-            :key="product.id"
-            class="product-card"
-            shadow="hover"
-          >
-            <div class="product-image">
-              <img :src="product.imageUrl || '/placeholder.png'" :alt="product.name" />
-            </div>
-            <div class="product-info">
-              <h3 class="product-name">{{ product.name }}</h3>
-              <p class="product-desc">{{ product.description }}</p>
-              <div class="product-price">
-                <span class="price">¥{{ product.price }}</span>
-                <span class="stock">库存: {{ product.stock }}</span>
+          <div class="product-grid" v-loading="loading">
+            <el-card
+              v-for="product in products"
+              :key="product.id"
+              class="product-card"
+              shadow="hover"
+            >
+              <div class="product-image">
+                <img
+                  :src="product.imageUrl || '/placeholder.svg'"
+                  :alt="product.name"
+                  @error="onImgError($event)"
+                />
+                <div v-if="(product.stock || 0) <= 0" class="out-of-stock-badge">缺货</div>
               </div>
-              <div class="product-actions">
-                <el-button type="primary" size="small" @click="handleBuy(product)">
-                  立即购买
-                </el-button>
+              <div class="product-info">
+                <h3 class="product-name">{{ product.name }}</h3>
+                <p class="product-desc">{{ product.description || '暂无描述' }}</p>
+                <div class="product-price">
+                  <span class="price">¥{{ product.price }}</span>
+                  <span class="stock" :class="{ 'low-stock': (product.stock || 0) > 0 && (product.stock || 0) <= 5 }">
+                    库存: {{ product.stock || 0 }}
+                  </span>
+                </div>
+                <div class="product-actions">
+                  <el-button
+                    type="primary"
+                    size="small"
+                    :disabled="(product.stock || 0) <= 0"
+                    @click="handleBuy(product)"
+                  >
+                    {{ (product.stock || 0) > 0 ? '立即购买' : '已售罄' }}
+                  </el-button>
+                </div>
               </div>
-            </div>
-          </el-card>
-        </div>
+            </el-card>
+          </div>
 
-        <el-empty v-if="!loading && products.length === 0" description="暂无商品" />
+          <el-empty v-if="!loading && products.length === 0" description="暂无商品" />
 
-        <el-pagination
-          v-model:current-page="pagination.page"
-          v-model:page-size="pagination.size"
-          :total="pagination.total"
-          :page-sizes="[8, 12, 20, 40]"
-          layout="total, sizes, prev, pager, next"
-          style="margin-top: 30px; justify-content: center"
-          @size-change="handleSizeChange"
-          @current-change="handlePageChange"
-        />
-      </el-main>
+          <el-pagination
+            v-if="pagination.total > 0"
+            v-model:current-page="pagination.page"
+            v-model:page-size="pagination.size"
+            :total="pagination.total"
+            :page-sizes="[8, 12, 20, 40]"
+            layout="total, sizes, prev, pager, next"
+            style="margin-top: 30px; justify-content: center"
+            @size-change="handleSizeChange"
+            @current-change="handlePageChange"
+          />
+        </el-main>
+      </el-container>
     </el-container>
   </div>
 </template>
@@ -76,6 +88,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/userStore'
 import { getProductList } from '@/api/product'
+import SideNav from '@/components/SideNav.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -90,23 +103,59 @@ const pagination = reactive({
   total: 0
 })
 
+function onImgError(e) {
+  // 图片加载失败时使用内联 SVG 占位
+  if (e.target && !e.target.dataset.fallback) {
+    e.target.dataset.fallback = '1'
+    const w = e.target.clientWidth || 200
+    const h = e.target.clientHeight || 200
+    // 从最近路径找到 alt 文本 (商品名称)
+    const alt = e.target.alt || '商品'
+    const text = alt.slice(0, 4)
+    const colors = ['#409EFF', '#67C23A', '#E6A23C', '#F56C6C', '#909399']
+    const color = colors[Math.abs(hashCode(alt)) % colors.length]
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${w} ${h}'>
+      <rect width='100%' height='100%' fill='#f0f2f5'/>
+      <text x='50%' y='50%' text-anchor='middle' dy='.3em'
+            font-size='24' fill='${color}' font-family='sans-serif' font-weight='bold'>${text}</text>
+    </svg>`
+    e.target.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(svg)
+  }
+}
+
+function hashCode(str) {
+  let h = 0
+  for (let i = 0; i < str.length; i++) {
+    h = ((h << 5) - h) + str.charCodeAt(i)
+    h |= 0
+  }
+  return h
+}
+
 const fetchProducts = async () => {
   loading.value = true
   try {
     const res = await getProductList({
       page: pagination.page,
-      size: pagination.size
+      size: pagination.size,
+      keyword: searchKeyword.value || undefined
     })
-    products.value = res.data.records
-    pagination.total = res.data.total
+    if (res.data) {
+      products.value = res.data.records || []
+      pagination.total = res.data.total || 0
+    }
   } catch (error) {
-    ElMessage.error('获取商品列表失败')
+    ElMessage.error('获取商品列表失败: ' + (error.message || ''))
   } finally {
     loading.value = false
   }
 }
 
 const handleBuy = (product) => {
+  if (!product || (product.stock || 0) <= 0) {
+    ElMessage.warning('该商品暂时缺货')
+    return
+  }
   router.push({
     name: 'OrderCreate',
     query: {
@@ -129,15 +178,6 @@ const handlePageChange = (page) => {
   fetchProducts()
 }
 
-const handleLogout = () => {
-  userStore.logout()
-  router.push('/login')
-}
-
-const goToOrders = () => {
-  router.push('/orders')
-}
-
 onMounted(() => {
   fetchProducts()
 })
@@ -150,77 +190,75 @@ onMounted(() => {
 }
 
 .el-header {
-  background: linear-gradient(135deg, #409eff 0%, #66b1ff 100%);
-  color: white;
-  line-height: 60px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: white;
+  border-bottom: 1px solid #ebeef5;
+  height: 64px;
+  line-height: 64px;
+  padding: 0 24px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
 }
 
 .header-content {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 16px;
 }
 
 .header-content h2 {
   margin: 0;
+  font-size: 20px;
   font-weight: 600;
+  color: #303133;
+  line-height: 64px;
 }
 
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 15px;
+.header-subtitle {
+  color: #909399;
+  font-size: 13px;
 }
 
 .el-main {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 30px 20px;
+  padding: 24px;
 }
 
 .search-bar {
-  margin-bottom: 30px;
+  margin-bottom: 24px;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .product-grid {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 20px;
   width: 100%;
   box-sizing: border-box;
 }
 
 .product-card {
-  flex: 0 0 calc((100% - 60px) / 4);  /* 桌面 4 列: 3 个 gap = 60px */
-  max-width: calc((100% - 60px) / 4);
   border-radius: 12px;
   overflow: hidden;
   transition: transform 0.3s, box-shadow 0.3s;
   min-width: 0;
   box-sizing: border-box;
+  width: 100%;
 }
 
 @media (max-width: 1199px) {
-  .product-card {
-    flex: 0 0 calc((100% - 40px) / 3);
-    max-width: calc((100% - 40px) / 3);
+  .product-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
 @media (max-width: 900px) {
-  .product-card {
-    flex: 0 0 calc((100% - 20px) / 2);
-    max-width: calc((100% - 20px) / 2);
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 600px) {
-  .product-card {
-    flex: 0 0 100%;
-    max-width: 100%;
+  .product-grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -241,18 +279,37 @@ onMounted(() => {
 }
 
 .product-image {
-  height: 180px;
+  width: 100%;
+  height: 200px;
   overflow: hidden;
   background-color: #f0f2f5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
+  position: relative;
 }
 
 .product-image img {
-  max-width: 100%;
-  max-height: 100%;
+  display: block;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
+  object-position: center;
+  transition: transform 0.3s;
+}
+
+.product-card:hover .product-image img {
+  transform: scale(1.05);
+}
+
+.out-of-stock-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(245, 108, 108, 0.9);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .product-info {
@@ -298,6 +355,11 @@ onMounted(() => {
 .stock {
   font-size: 13px;
   color: #909399;
+}
+
+.stock.low-stock {
+  color: #e6a23c;
+  font-weight: 600;
 }
 
 .product-actions {

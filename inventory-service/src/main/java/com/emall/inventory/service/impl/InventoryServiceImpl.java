@@ -55,6 +55,16 @@ public class InventoryServiceImpl extends ServiceImpl<InventoryMapper, Inventory
     }
 
     @Override
+    public void restoreStock(Long productId, Integer quantity) {
+        log.info("Restoring inventory - productId: {}, quantity: {}", productId, quantity);
+        int rows = inventoryMapper.restoreStock(productId, quantity);
+        if (rows == 0) {
+            throw new BusinessException("Restore failed, productId not found: " + productId);
+        }
+        log.info("Inventory restored - productId: {}", productId);
+    }
+
+    @Override
     public InventoryResponse getInventory(Long productId) {
         LambdaQueryWrapper<Inventory> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Inventory::getProductId, productId);

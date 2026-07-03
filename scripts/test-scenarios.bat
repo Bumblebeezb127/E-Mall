@@ -9,7 +9,7 @@ echo     E-Mall 微服务异常场景测试脚本
 echo ================================================
 echo.
 
-set GATEWAY_URL=http://localhost:8080
+set GATEWAY_URL=http://localhost:9000
 set INVENTORY_URL=http://localhost:8084
 set PRODUCT_URL=http://localhost:8082
 set NACOS_URL=http://localhost:8848

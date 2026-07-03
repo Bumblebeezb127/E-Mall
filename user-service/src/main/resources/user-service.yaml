@@ -1,7 +1,7 @@
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/e_mall_user?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://localhost:3306/db_user?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: emall_app
     password: Emall@2024
 
@@ -39,6 +39,6 @@ sentinel:
   eager:
     enabled: true
   transport:
-    dashboard: localhost:8080
+    dashboard: localhost:8858
   metrics:
     enabled: true

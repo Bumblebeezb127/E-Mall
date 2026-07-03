@@ -19,6 +19,8 @@ public class OrderDetailResponse {
     private Integer status;
     private String statusDesc;
     private String createdAt;
+    private String address;
+    private String remark;
     private List<OrderItemDetail> items;
 
     @Data
