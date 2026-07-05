@@ -123,7 +123,7 @@ python postman\smoke_test_collection.py
 | `{{newProductId}}` | 6.2.2 | admin 创建的临时商品 ID |
 | `{{orderId}}` / `{{paidOrderId}}` / `{{cancelOrderId}}` | 4.1 / 4.5 / 4.7 | 各阶段订单 ID |
 | `{{mqOrderId}}` / `{{mqCancelId}}` | 8.1 / 8.3 | MQ 测试专用订单 ID |
-| `{{logFilePath}}` | 6.5.1 | 首个日志文件路径 |
+| `{{logFileName}}` | 6.5.1 | 首个日志文件名 (只存 name, 不存绝对路径) |
 
 ## 注意事项
 
@@ -131,7 +131,12 @@ python postman\smoke_test_collection.py
    - 1.1 → 1.2 → 1.3 必须先跑 (否则后续无 token)
    - 1.4 跑过后才有 productId
    - 4.1 → 4.5 顺序执行才能正确写 paidOrderId
-2. **6.1.4 副作用**: 把测试用户临时提权 ADMIN, 如要测 6.6.2 的 403 需先执行 6.1.5 把用户降回 USER (Runner 中可手动调整顺序)
+2. **6.1 用户角色状态管理 (V10 修复)**: 
+   - 6.1.2 admin 改测试用户 → USER (前置保证干净)
+   - 6.1.3 USER 访问 /admin/list → 期望 403
+   - 6.1.4 admin 提权 ADMIN
+   - **6.1.5 admin 降回 USER (关键清理步骤, 不要删!)** — 保证 6.2.5/6.3.4/6.4.3/6.5.4/6.6.2 这 5 个 USER 角色测试时用户角色干净.
+   - 缺少 6.1.5 会导致 6.2-6.6 的 USER 越权测试拿到 200 而非 403, 全部失败报 `expected 200 to deeply equal 403`.
 3. **8.5 等待**: Runner 模式下无需额外等待, product-service listener 实时消费; 单步调试时手动等待 2-3s
 4. **限流测试 7.1**: 在 Runner 中配 Iterations=50 才有意义, 单步看不出限流
 
