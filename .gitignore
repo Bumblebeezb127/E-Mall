@@ -71,12 +71,12 @@ easybuy-frontend/.env.*.local
 # IDE workspace caches
 *.lck
 
-# Project-specific: exclude local manual test script directory
-# 与 src/ 对应的本地手动测试脚本目录 (项目无关)
-# 但保留 test/results/ 目录用于 run-all-tests.bat 写日志
-test/
-!test/results/
+# Project-specific: include test scripts
+# 保留 test/ 下的 .py 测试脚本随仓库发布 (项目交付物)
+# 但排除 test/results/ 运行时日志 和 api_test_result.json 运行时产物
+test/results/
 test/results/*
+test/*.json
 
 # Project-specific: include generated documentation
 # 保留 doc/ 下的 docx 文档 + images/ 配图, 排除生成它们的 Python 脚本

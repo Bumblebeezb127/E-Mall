@@ -35,6 +35,8 @@ call :run_test "sentinel_test.py"             "4"  "Sentinel circuit breaker"
 call :run_test "test_cancel_restore_stock.py" "3"  "Cancel order restores stock"
 call :run_test "test_product_stock_sync.py"   "1"  "Product stock sync (V3)"
 
+if !FAIL! gtr 0 ( set "FINAL_EC=1" ) else ( set "FINAL_EC=0" )
+
 echo.
 echo ================================================
 echo   FINAL SUMMARY
@@ -47,8 +49,11 @@ echo !SUMMARY!
 echo.
 echo   Detailed logs: %RESULT_DIR%\
 echo ================================================
-
-if !FAIL! gtr 0 ( exit /b 1 ) else ( exit /b 0 )
+echo.
+echo   Exit code: !FINAL_EC!
+echo.
+pause
+exit /b !FINAL_EC!
 
 
 REM ============================================================
@@ -68,7 +73,8 @@ echo [%CASES% cases] %NAME%
 echo   %DESC%
 echo ------------------------------------------------
 
-python "%TEST_DIR%\%NAME%" > "%LOG%" 2>&1
+REM Run test with real-time terminal output AND log to file
+powershell -NoProfile -ExecutionPolicy Bypass -Command "python '%TEST_DIR%\%NAME%' *>&1 | Tee-Object -FilePath '%LOG%'; exit $LASTEXITCODE"
 set "EC=!ERRORLEVEL!"
 
 findstr /C:"[FAIL]" /C:"[BUG CONFIRMED]" "%LOG%" >nul 2>&1
