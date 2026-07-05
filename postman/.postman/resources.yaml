@@ -1,0 +1,9 @@
+# Use this workspace to collaborate
+workspace:
+  id: e6398cb4-24da-450c-8a31-eb849d5ab567
+
+localResources:
+  collections:
+    - ../E-Mall-API-Collection.json
+  environments:
+    - ../E-Mall-Local.postman_environment.json
