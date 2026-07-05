@@ -14,4 +14,11 @@ public interface ProductService extends IService<Product> {
     void addProduct(AddProductRequest request);
 
     void updateStock(Long productId, Integer delta);
+
+    // Admin
+    Page<Product> adminList(int page, int size, String keyword, String category, Integer status);
+
+    void adminUpdate(Long id, AddProductRequest request);
+
+    void adminDelete(Long id);
 }

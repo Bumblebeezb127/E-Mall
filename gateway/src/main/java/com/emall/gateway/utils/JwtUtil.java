@@ -54,6 +54,11 @@ public class JwtUtil {
         return parseToken(token).get("userId", Long.class);
     }
 
+    public String getRoleFromToken(String token) {
+        Object role = parseToken(token).get("role");
+        return role == null ? "USER" : role.toString();
+    }
+
     public Date getExpirationFromToken(String token) {
         return parseToken(token).getExpiration();
     }

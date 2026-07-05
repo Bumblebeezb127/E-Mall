@@ -39,6 +39,10 @@
           <el-icon><User /></el-icon>
           <template #title>个人中心</template>
         </el-menu-item>
+        <el-menu-item v-if="isAdmin" index="/admin">
+          <el-icon><Setting /></el-icon>
+          <template #title>管理控制台</template>
+        </el-menu-item>
       </template>
       <template v-else>
         <el-menu-item index="/login">
@@ -79,7 +83,7 @@
 import { computed, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessageBox, ElMessage } from 'element-plus'
-import { Goods, Tickets, User, EditPen, SwitchButton, Fold, Expand } from '@element-plus/icons-vue'
+import { Goods, Tickets, User, EditPen, SwitchButton, Fold, Expand, Setting } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/userStore'
 
 const router = useRouter()
@@ -91,7 +95,15 @@ const asideWidth = computed(() => (collapsed.value ? '64px' : '220px'))
 
 const displayName = computed(() => userStore.username || userStore.userInfo?.username || '用户')
 const avatarChar = computed(() => (displayName.value || 'U').slice(0, 1).toUpperCase())
-const activeMenu = computed(() => route.path)
+const activeMenu = computed(() => {
+  // /admin 及其子页面统一高亮
+  if (route.path.startsWith('/admin')) return '/admin'
+  return route.path
+})
+const isAdmin = computed(() => {
+  const r = userStore.userInfo?.role
+  return r === 'ADMIN' || r === 'admin'
+})
 
 function toggleCollapsed() {
   collapsed.value = !collapsed.value

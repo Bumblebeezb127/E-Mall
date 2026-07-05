@@ -92,4 +92,41 @@ public class InventoryServiceImpl extends ServiceImpl<InventoryMapper, Inventory
             throw new BusinessException("Timeout simulation interrupted");
         }
     }
+
+    @Override
+    public com.baomidou.mybatisplus.extension.plugins.pagination.Page<Inventory> adminList(long page, long size, Long productId) {
+        LambdaQueryWrapper<Inventory> wrapper = new LambdaQueryWrapper<>();
+        if (productId != null) {
+            wrapper.eq(Inventory::getProductId, productId);
+        }
+        wrapper.orderByAsc(Inventory::getProductId);
+        return this.page(new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(page, size), wrapper);
+    }
+
+    @Override
+    public void adminInit(Long productId, Integer stock) {
+        LambdaQueryWrapper<Inventory> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Inventory::getProductId, productId);
+        Inventory inv = this.getOne(wrapper);
+        if (inv == null) {
+            inv = new Inventory();
+            inv.setProductId(productId);
+            inv.setStock(stock);
+            inv.setVersion(0);
+            this.save(inv);
+        } else {
+            inv.setStock(stock);
+            this.updateById(inv);
+        }
+    }
+
+    @Override
+    public void adminSetStock(Long productId, Integer stock) {
+        LambdaQueryWrapper<Inventory> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Inventory::getProductId, productId);
+        Inventory inv = this.getOne(wrapper);
+        if (inv == null) throw new BusinessException("Inventory not found for productId: " + productId);
+        inv.setStock(stock);
+        this.updateById(inv);
+    }
 }

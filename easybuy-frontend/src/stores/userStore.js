@@ -61,6 +61,7 @@ export const useUserStore = defineStore('user', {
           this.setUserInfo({
             id: res.data.id,
             username: res.data.username,
+            role: res.data.role || 'USER',
             token: res.data.token,
             expiresIn: res.data.expiresIn
           })

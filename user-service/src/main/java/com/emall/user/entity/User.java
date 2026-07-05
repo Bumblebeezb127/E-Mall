@@ -18,5 +18,7 @@ public class User {
 
     private String password;
 
+    private String role = "USER";
+
     private LocalDateTime createdAt;
 }

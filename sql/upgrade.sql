@@ -3,6 +3,20 @@
 -- 在已有数据库基础上运行, 不会破坏现有数据
 -- =============================================================
 
+-- ----------------------------
+-- 0. 给 user 表添加 role 列 (admin 角色体系)
+-- ----------------------------
+USE db_user;
+SET @col_exists = (SELECT COUNT(*) FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = 'db_user' AND TABLE_NAME = 'user' AND COLUMN_NAME = 'role');
+SET @sql = IF(@col_exists = 0,
+              'ALTER TABLE user ADD COLUMN role VARCHAR(16) NOT NULL DEFAULT ''USER'' COMMENT ''角色: USER / ADMIN'' AFTER password',
+              'SELECT ''column role already exists'' AS msg');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- 提升一个默认管理员 (用户名 admin / 密码 admin123, 已由 init.sql 插入), 仅在该用户存在且还不是 admin 时
+UPDATE user SET role = 'ADMIN' WHERE username = 'admin' AND role <> 'ADMIN';
+
 USE db_order;
 -- ----------------------------
 -- 1. 给 order 表添加 address / remark 字段

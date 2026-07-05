@@ -16,6 +16,7 @@ CONFIGS = [
     ("order-service.yaml", "DEFAULT_GROUP"),
     ("inventory-service.yaml", "DEFAULT_GROUP"),
     ("gateway.yaml", "DEFAULT_GROUP"),
+    ("log-service.yaml", "DEFAULT_GROUP"),
 ]
 
 def push_config(data_id, group, content):
@@ -46,6 +47,7 @@ for cfg_name, group in CONFIGS:
         BASE_DIR / "order-service" / "src" / "main" / "resources" / cfg_name,
         BASE_DIR / "inventory-service" / "src" / "main" / "resources" / cfg_name,
         BASE_DIR / "gateway" / "src" / "main" / "resources" / cfg_name,
+        BASE_DIR / "log-service" / "src" / "main" / "resources" / cfg_name,
     ]
     src = next((p for p in candidates if p.exists()), None)
     if not src:

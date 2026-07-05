@@ -41,4 +41,49 @@ public class InventoryController {
         inventoryService.simulateTimeout();
         return ResponseResult.success("Timeout simulation completed", null);
     }
+
+    // ============== Admin 端点 ==============
+
+    @GetMapping("/admin/list")
+    public ResponseResult<java.util.Map<String, Object>> adminList(
+            @RequestHeader(value = "X-User-Role", required = false) String role,
+            @RequestParam(defaultValue = "1") long page,
+            @RequestParam(defaultValue = "20") long size,
+            @RequestParam(required = false) Long productId) {
+        requireAdmin(role);
+        com.baomidou.mybatisplus.extension.plugins.pagination.Page<com.emall.inventory.entity.Inventory> pg =
+                inventoryService.adminList(page, size, productId);
+        java.util.Map<String, Object> data = new java.util.HashMap<>();
+        data.put("records", pg.getRecords());
+        data.put("total", pg.getTotal());
+        data.put("page", pg.getCurrent());
+        data.put("size", pg.getSize());
+        return ResponseResult.success(data);
+    }
+
+    @PostMapping("/admin/init")
+    public ResponseResult<Void> adminInit(
+            @RequestHeader(value = "X-User-Role", required = false) String role,
+            @RequestParam Long productId,
+            @RequestParam Integer stock) {
+        requireAdmin(role);
+        inventoryService.adminInit(productId, stock);
+        return ResponseResult.success("Inventory initialized", null);
+    }
+
+    @PutMapping("/admin/update")
+    public ResponseResult<Void> adminUpdate(
+            @RequestHeader(value = "X-User-Role", required = false) String role,
+            @RequestParam Long productId,
+            @RequestParam Integer stock) {
+        requireAdmin(role);
+        inventoryService.adminSetStock(productId, stock);
+        return ResponseResult.success("Inventory set", null);
+    }
+
+    private void requireAdmin(String role) {
+        if (!"ADMIN".equals(role)) {
+            throw new com.emall.inventory.exception.BusinessException(403, "Admin role required");
+        }
+    }
 }

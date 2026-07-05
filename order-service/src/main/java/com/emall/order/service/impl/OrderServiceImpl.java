@@ -1,6 +1,7 @@
 package com.emall.order.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.emall.order.dto.CreateOrderRequest;
 import com.emall.order.dto.DeductRequest;
@@ -13,6 +14,7 @@ import com.emall.order.feign.InventoryFeignClient;
 import com.emall.order.feign.ProductFeignClient;
 import com.emall.order.mapper.OrderItemMapper;
 import com.emall.order.mapper.OrderMapper;
+import com.emall.order.mq.OrderEventPublisher;
 import com.emall.order.service.OrderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +26,9 @@ import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -46,6 +50,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     @Autowired
     private ProductFeignClient productFeignClient;
+
+    @Autowired
+    private OrderEventPublisher orderEventPublisher;
 
     private static final String STATUS_PENDING = "待支付";
     private static final String STATUS_PAID = "已支付";
@@ -131,6 +138,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
         log.info("Order created successfully - orderId: {}, orderNo: {}, amount: {}",
                 order.getId(), orderNo, totalAmount);
+
+        // 4. 异步发布 order.created 事件 (RabbitMQ)
+        orderEventPublisher.publishCreated(order, Collections.singletonList(orderItem));
 
         return buildOrderDetailResponse(order, Collections.singletonList(orderItem));
     }
@@ -243,6 +253,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
         log.info("Order cancelled - orderId: {}", orderId);
 
+        // 异步发布 order.cancelled 事件
+        orderEventPublisher.publishCancelled(order, orderItems);
+
         return buildOrderDetailResponse(order, orderItems);
     }
 
@@ -274,7 +287,130 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         itemWrapper.eq(OrderItem::getOrderId, orderId);
         List<OrderItem> orderItems = orderItemMapper.selectList(itemWrapper);
 
+        // 异步发布 order.paid 事件
+        orderEventPublisher.publishPaid(order, orderItems);
+
         return buildOrderDetailResponse(order, orderItems);
+    }
+
+    @Override
+    public Page<Order> adminList(long page, long size, Long userId, String orderNo, Integer status) {
+        LambdaQueryWrapper<Order> wrapper = new LambdaQueryWrapper<>();
+        if (userId != null) {
+            wrapper.eq(Order::getUserId, userId);
+        }
+        if (orderNo != null && !orderNo.isEmpty()) {
+            wrapper.like(Order::getOrderNo, orderNo);
+        }
+        if (status != null) {
+            wrapper.eq(Order::getStatus, status);
+        }
+        wrapper.orderByDesc(Order::getCreatedAt);
+        return orderMapper.selectPage(new Page<>(page, size), wrapper);
+    }
+
+    @Override
+    public Map<String, Object> adminStats() {
+        Map<String, Object> stats = new HashMap<>();
+        long total = orderMapper.selectCount(null);
+        stats.put("total", total);
+        for (int s = 0; s <= 4; s++) {
+            Long count = orderMapper.selectCount(
+                    new LambdaQueryWrapper<Order>().eq(Order::getStatus, s));
+            stats.put("status_" + s, count);
+        }
+        return stats;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public OrderDetailResponse adminForceCancel(Long orderId) {
+        log.info("Admin force cancel order - orderId: {}", orderId);
+        Order order = orderMapper.selectById(orderId);
+        if (order == null) {
+            throw new BusinessException("订单不存在");
+        }
+        if (order.getStatus() == 4) {
+            throw new BusinessException("订单已取消，无需重复操作");
+        }
+        if (order.getStatus() != 0) {
+            throw new BusinessException("仅待支付订单可强制取消");
+        }
+
+        LambdaQueryWrapper<OrderItem> itemWrapper = new LambdaQueryWrapper<>();
+        itemWrapper.eq(OrderItem::getOrderId, orderId);
+        List<OrderItem> orderItems = orderItemMapper.selectList(itemWrapper);
+
+        for (OrderItem item : orderItems) {
+            try {
+                ResponseResult<Void> restoreResponse = inventoryFeignClient.restore(
+                        new DeductRequest(item.getProductId(), item.getQuantity()));
+                if (restoreResponse == null || restoreResponse.getCode() != 200) {
+                    String msg = restoreResponse != null ? restoreResponse.getMessage() : "库存服务无响应";
+                    throw new BusinessException(503, "回滚库存失败: " + msg);
+                }
+            } catch (BusinessException e) {
+                throw e;
+            } catch (Exception e) {
+                log.error("Admin force cancel restore inventory exception - productId: {}", item.getProductId(), e);
+                throw new BusinessException(503, "回滚库存异常: " + e.getMessage());
+            }
+        }
+
+        order.setStatus(4);
+        order.setUpdatedAt(java.time.LocalDateTime.now());
+        orderMapper.updateById(order);
+        log.info("Admin force cancel order - orderId: {} done", orderId);
+
+        // 异步发布 order.cancelled 事件
+        orderEventPublisher.publishCancelled(order, orderItems);
+
+        return buildOrderDetailResponse(order, orderItems);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public OrderDetailResponse adminForcePay(Long orderId) {
+        log.info("Admin force pay order - orderId: {}", orderId);
+        Order order = orderMapper.selectById(orderId);
+        if (order == null) {
+            throw new BusinessException("订单不存在");
+        }
+        if (order.getStatus() == 1) {
+            throw new BusinessException("订单已支付");
+        }
+        if (order.getStatus() != 0) {
+            throw new BusinessException("仅待支付订单可强制支付");
+        }
+
+        order.setStatus(1);
+        order.setUpdatedAt(java.time.LocalDateTime.now());
+        orderMapper.updateById(order);
+        log.info("Admin force pay order - orderId: {} done", orderId);
+
+        LambdaQueryWrapper<OrderItem> itemWrapper = new LambdaQueryWrapper<>();
+        itemWrapper.eq(OrderItem::getOrderId, orderId);
+        List<OrderItem> orderItems = orderItemMapper.selectList(itemWrapper);
+
+        // 异步发布 order.paid 事件
+        orderEventPublisher.publishPaid(order, orderItems);
+
+        return buildOrderDetailResponse(order, orderItems);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void adminDelete(Long orderId) {
+        log.info("Admin delete order - orderId: {}", orderId);
+        Order order = orderMapper.selectById(orderId);
+        if (order == null) {
+            throw new BusinessException("订单不存在");
+        }
+        // 同步删除订单项
+        orderItemMapper.delete(
+                new LambdaQueryWrapper<OrderItem>().eq(OrderItem::getOrderId, orderId));
+        orderMapper.deleteById(orderId);
+        log.info("Admin delete order - orderId: {} done", orderId);
     }
 
     private String generateOrderNo() {

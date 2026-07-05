@@ -6,6 +6,8 @@ import com.emall.product.dto.AddProductRequest;
 import com.emall.product.dto.PageResult;
 import com.emall.product.dto.ResponseResult;
 import com.emall.product.entity.Product;
+import com.emall.product.mq.OrderEventMessage;
+import com.emall.product.service.MqOrderStatsService;
 import com.emall.product.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
@@ -24,6 +26,9 @@ public class ProductController {
 
     @Autowired
     private PageConfig pageConfig;
+
+    @Autowired
+    private MqOrderStatsService mqOrderStatsService;
 
     @GetMapping("/list")
     public ResponseResult<PageResult<Product>> getProductList(
@@ -68,5 +73,74 @@ public class ProductController {
             @RequestParam Integer delta) {
         productService.updateStock(productId, delta);
         return ResponseResult.success("Product stock updated", null);
+    }
+
+    // ============== Admin 端点 ==============
+
+    @PostMapping("/admin/create")
+    public ResponseResult<Void> adminCreate(
+            @RequestHeader(value = "X-User-Role", required = false) String role,
+            @Valid @RequestBody AddProductRequest request) {
+        requireAdmin(role);
+        productService.addProduct(request);
+        return ResponseResult.success("Product created", null);
+    }
+
+    @PutMapping("/admin/update/{id}")
+    public ResponseResult<Void> adminUpdate(
+            @RequestHeader(value = "X-User-Role", required = false) String role,
+            @PathVariable Long id,
+            @RequestBody AddProductRequest request) {
+        requireAdmin(role);
+        productService.adminUpdate(id, request);
+        return ResponseResult.success("Product updated", null);
+    }
+
+    @DeleteMapping("/admin/delete/{id}")
+    public ResponseResult<Void> adminDelete(
+            @RequestHeader(value = "X-User-Role", required = false) String role,
+            @PathVariable Long id) {
+        requireAdmin(role);
+        productService.adminDelete(id);
+        return ResponseResult.success("Product deleted", null);
+    }
+
+    @GetMapping("/admin/list")
+    public ResponseResult<PageResult<Product>> adminList(
+            @RequestHeader(value = "X-User-Role", required = false) String role,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) Integer status) {
+        requireAdmin(role);
+        int actualSize = (size == null || size <= 0) ? pageConfig.getMaxSize() : size;
+        Page<Product> result = productService.adminList(page, actualSize, keyword, category, status);
+        PageResult<Product> pr = new PageResult<>(result.getRecords(), result.getTotal(),
+                result.getCurrent(), result.getSize(), result.getPages());
+        return ResponseResult.success(pr);
+    }
+
+    // ============== MQ 事件查询 (Admin) ==============
+
+    @GetMapping("/admin/mq/events")
+    public ResponseResult<java.util.Map<String, Object>> adminMqEvents(
+            @RequestHeader(value = "X-User-Role", required = false) String role,
+            @RequestParam(defaultValue = "20") int limit) {
+        requireAdmin(role);
+        java.util.List<OrderEventMessage> events = mqOrderStatsService.listRecent(limit);
+        java.util.Map<String, Object> data = new java.util.HashMap<>();
+        data.put("total", mqOrderStatsService.totalCount());
+        data.put("created", mqOrderStatsService.countByType("order.created"));
+        data.put("paid", mqOrderStatsService.countByType("order.paid"));
+        data.put("cancelled", mqOrderStatsService.countByType("order.cancelled"));
+        data.put("events", events);
+        return ResponseResult.success(data);
+    }
+
+    private void requireAdmin(String role) {
+        if (!"ADMIN".equals(role)) {
+            throw new com.emall.product.exception.BusinessException(403, "Admin role required");
+        }
     }
 }

@@ -24,11 +24,14 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String USER_ID_HEADER = "X-User-Id";
+    private static final String USER_ROLE_HEADER = "X-User-Role";
+    private static final String USERNAME_HEADER = "X-User-Name";
     private static final String BEARER_PREFIX = "Bearer ";
 
     private static final List<String> WHITE_LIST = Arrays.asList(
             "/api/user/login",
             "/api/user/register",
+            "/api/user/info",
             "/api/product/list",
             "/api/product/detail"
     );
@@ -71,11 +74,14 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
             Long userId = jwtUtil.getUserIdFromToken(token);
             String username = jwtUtil.getUsernameFromToken(token);
+            String role = jwtUtil.getRoleFromToken(token);
 
-            log.info("Token validated successfully - userId: {}, username: {}", userId, username);
+            log.info("Token validated successfully - userId: {}, username: {}, role: {}", userId, username, role);
 
             ServerHttpRequest mutatedRequest = request.mutate()
                     .header(USER_ID_HEADER, String.valueOf(userId))
+                    .header(USER_ROLE_HEADER, role == null ? "USER" : role)
+                    .header(USERNAME_HEADER, username == null ? "" : username)
                     .build();
 
             return chain.filter(exchange.mutate().request(mutatedRequest).build());

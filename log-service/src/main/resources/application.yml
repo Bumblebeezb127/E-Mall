@@ -1,0 +1,32 @@
+server:
+  port: 8085
+
+spring:
+  profiles:
+    active: dev
+  application:
+    name: log-service
+  cloud:
+    nacos:
+      config:
+        server-addr: 127.0.0.1:8848
+        file-extension: yaml
+        import-check:
+          enabled: false
+      discovery:
+        server-addr: 127.0.0.1:8848
+
+emall:
+  log:
+    root: ${EMALL_LOG_ROOT:logs}
+    max-file-size-mb: 50
+    max-tail-lines: 5000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always

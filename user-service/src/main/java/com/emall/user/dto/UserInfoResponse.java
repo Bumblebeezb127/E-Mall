@@ -11,5 +11,6 @@ public class UserInfoResponse {
 
     private Long id;
     private String username;
+    private String role = "USER";
     private String createdAt;
 }

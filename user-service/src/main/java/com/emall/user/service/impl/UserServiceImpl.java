@@ -54,7 +54,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException("Invalid password");
         }
 
-        String token = jwtUtil.generateToken(user.getId(), user.getUsername());
+        String token = jwtUtil.generateToken(user.getId(), user.getUsername(), user.getRole());
 
         LoginResponse response = new LoginResponse();
         response.setToken(token);
@@ -62,6 +62,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 同步返回用户基础信息, 前端无需再请求 /info
         response.setId(user.getId());
         response.setUsername(user.getUsername());
+        response.setRole(user.getRole());
 
         return response;
     }
@@ -76,6 +77,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         UserInfoResponse response = new UserInfoResponse();
         response.setId(user.getId());
         response.setUsername(user.getUsername());
+        response.setRole(user.getRole());
         response.setCreatedAt(user.getCreatedAt().format(DATE_FORMATTER));
 
         return response;

@@ -69,4 +69,40 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         product.setStock(newStock);
         this.updateById(product);
     }
+
+    @Override
+    public Page<Product> adminList(int page, int size, String keyword, String category, Integer status) {
+        LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
+        if (StringUtils.hasText(keyword)) {
+            wrapper.like(Product::getName, keyword);
+        }
+        if (StringUtils.hasText(category)) {
+            wrapper.eq(Product::getCategory, category);
+        }
+        if (status != null) {
+            wrapper.eq(Product::getStatus, status);
+        }
+        wrapper.orderByDesc(Product::getId);
+        return this.page(new Page<>(page, size), wrapper);
+    }
+
+    @Override
+    public void adminUpdate(Long id, AddProductRequest request) {
+        Product p = this.getById(id);
+        if (p == null) throw new BusinessException("Product not found");
+        if (StringUtils.hasText(request.getName())) p.setName(request.getName());
+        if (request.getPrice() != null) p.setPrice(request.getPrice());
+        if (request.getStock() != null) p.setStock(request.getStock());
+        if (StringUtils.hasText(request.getDescription())) p.setDescription(request.getDescription());
+        if (StringUtils.hasText(request.getImageUrl())) p.setImageUrl(request.getImageUrl());
+        if (StringUtils.hasText(request.getCategory())) p.setCategory(request.getCategory());
+        this.updateById(p);
+    }
+
+    @Override
+    public void adminDelete(Long id) {
+        Product p = this.getById(id);
+        if (p == null) throw new BusinessException("Product not found");
+        this.removeById(id);
+    }
 }

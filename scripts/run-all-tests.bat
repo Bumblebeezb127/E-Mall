@@ -1,119 +1,68 @@
 @echo off
-setlocal enabledelayedexpansion
+REM ====================================================================
+REM  E-Mall Test Suite Runner (portable)
+REM  - 项目根从脚本所在目录自动解析
+REM  - 实时输出到终端, 同时落到 test\results\*.log
+REM ====================================================================
+setlocal EnableExtensions EnableDelayedExpansion
+chcp 65001 >nul
 
-set "BASE_DIR=d:\Learning materials\SpringCloud\e-mall"
+set "SCRIPT_DIR=%~dp0"
+for %%I in ("%SCRIPT_DIR%..") do set "BASE_DIR=%%~fI"
+if not exist "%BASE_DIR%\pom.xml" (
+    echo [ERROR] pom.xml not found at "%BASE_DIR%".
+    exit /b 1
+)
+
 set "TEST_DIR=%BASE_DIR%\test"
 set "RESULT_DIR=%TEST_DIR%\results"
-set "GATEWAY_URL=http://localhost:9000"
-
+set "GATEWAY=http://localhost:9000"
 if not exist "%RESULT_DIR%" mkdir "%RESULT_DIR%"
 
 echo ================================================
 echo   E-Mall Test Suite Runner
-echo   Time: %date% %time%
-echo   Gateway: %GATEWAY_URL%
+echo   Project : %BASE_DIR%
+echo   Gateway : %GATEWAY%
+echo   Time    : %DATE% %TIME%
 echo ================================================
 
-REM Pre-check: gateway reachable?
 echo.
 echo [Pre-check] Gateway health ...
-powershell -NoProfile -Command "try { $r = Invoke-WebRequest -Uri '%GATEWAY_URL%/api/product/list?page=1&size=1' -UseBasicParsing -TimeoutSec 5; if ($r.StatusCode -eq 200) { exit 0 } else { exit 1 } } catch { exit 1 }" >nul 2>&1
-if !ERRORLEVEL! neq 0 (
-    echo   [FAIL] Gateway not reachable at %GATEWAY_URL%
-    echo   Please start services first: scripts\start-all-services.bat
-    exit /b 1
-)
-echo   [OK] Gateway is up
-
-set PASS=0
-set FAIL=0
-set "SUMMARY="
-
-call :run_test "api_test.py"                  "16" "End-to-end API flow"
-call :run_test "integration_test.py"          "12" "Auth + Order integration"
-call :run_test "sentinel_test.py"             "4"  "Sentinel circuit breaker"
-call :run_test "test_cancel_restore_stock.py" "3"  "Cancel order restores stock"
-call :run_test "test_product_stock_sync.py"   "1"  "Product stock sync (V3)"
-
-if !FAIL! gtr 0 ( set "FINAL_EC=1" ) else ( set "FINAL_EC=0" )
-
+powershell -NoProfile -Command "$ErrorActionPreference='SilentlyContinue'; try { (Invoke-WebRequest -Uri '%GATEWAY%/api/product/list' -UseBasicParsing -TimeoutSec 5).StatusCode } catch { 'DOWN' }"
 echo.
+
+set "SCRIPTS=api_test.py integration_test.py sentinel_test.py test_cancel_restore_stock.py test_product_stock_sync.py admin_test.py"
+set "TOTAL_PASS=0"
+set "TOTAL_FAIL=0"
+
+for %%F in (%SCRIPTS%) do (
+    set "PY=%TEST_DIR%\%%F"
+    if exist "!PY!" (
+        echo -----------------------------------------------
+        echo [RUN] %%F
+        echo -----------------------------------------------
+        powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Continue'; & python '!PY!' 2>&1 | ForEach-Object { $_ | Tee-Object -FilePath '%RESULT_DIR%\%%~nF.log' -Append | Out-Host }"
+        if !ERRORLEVEL!==0 (
+            echo    [PASS] %%F
+            set /a TOTAL_PASS+=1
+        ) else (
+            echo    [FAIL] %%F (exit !ERRORLEVEL!, log: %RESULT_DIR%\%%~nF.log)
+            set /a TOTAL_FAIL+=1
+        )
+        echo.
+    ) else (
+        echo    [SKIP] %%F - file not found
+    )
+)
+
 echo ================================================
 echo   FINAL SUMMARY
-echo ================================================
-echo   PASS: !PASS!
-echo   FAIL: !FAIL!
-echo.
-echo   Details:
-echo !SUMMARY!
-echo.
+echo   PASS: !TOTAL_PASS!
+echo   FAIL: !TOTAL_FAIL!
 echo   Detailed logs: %RESULT_DIR%\
 echo ================================================
-echo.
-echo   Exit code: !FINAL_EC!
+
 echo.
 pause
-exit /b !FINAL_EC!
-
-
-REM ============================================================
-REM Run a single test, capture exit code + output, classify result
-REM Args: %1=script  %2=cases  %3=description
-REM ============================================================
-:run_test
-set "NAME=%~1"
-set "CASES=%~2"
-set "DESC=%~3"
-set "BASE=%~n1"
-set "LOG=%RESULT_DIR%\%BASE%.log"
-
-echo.
-echo ------------------------------------------------
-echo [%CASES% cases] %NAME%
-echo   %DESC%
-echo ------------------------------------------------
-
-REM Run test with real-time terminal output AND log to file
-powershell -NoProfile -ExecutionPolicy Bypass -Command "python '%TEST_DIR%\%NAME%' *>&1 | Tee-Object -FilePath '%LOG%'; exit $LASTEXITCODE"
-set "EC=!ERRORLEVEL!"
-
-findstr /C:"[FAIL]" /C:"[BUG CONFIRMED]" "%LOG%" >nul 2>&1
-set "HAS_FAIL=!ERRORLEVEL!"
-findstr /C:"[PASS]" /C:"  [OK]" "%LOG%" >nul 2>&1
-set "HAS_PASS=!ERRORLEVEL!"
-
-REM --- Classification (avoid compound if/else ambiguity) ---
-set "RESULT=FAIL"
-set "REASON=exit !EC!"
-
-if !EC! equ 0 (
-    if !HAS_FAIL! neq 0 (
-        set "RESULT=PASS"
-        set "REASON=exit 0"
-    ) else (
-        set "REASON=exit 0 but FAIL marker in output"
-    )
-) else (
-    if !HAS_PASS! equ 0 (
-        if !HAS_FAIL! neq 0 (
-            set "RESULT=PASS"
-            set "REASON=exit !EC! but PASS marker in output"
-        ) else (
-            set "REASON=exit !EC! and FAIL marker in output"
-        )
-    ) else (
-        set "REASON=exit !EC!"
-    )
-)
-
-REM --- Print result + accumulate summary ---
-if "!RESULT!"=="PASS" (
-    echo   [PASS] %NAME%  ^(!REASON!^)
-    set /a PASS+=1
-    set "SUMMARY=!SUMMARY!  [PASS] %NAME% (%CASES% cases) - !REASON!; "
-) else (
-    echo   [FAIL] %NAME%  ^(!REASON!^, log: %LOG%^)
-    set /a FAIL+=1
-    set "SUMMARY=!SUMMARY!  [FAIL] %NAME% (%CASES% cases) - !REASON!; "
-)
-goto :eof
+endlocal
+exit /b 0

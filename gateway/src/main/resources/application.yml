@@ -58,6 +58,13 @@ spring:
           filters:
             - StripPrefix=1
 
+        - id: log-service
+          uri: lb://log-service
+          predicates:
+            - Path=/api/log/**
+          filters:
+            - StripPrefix=1
+
 jwt:
   secret: a8f5f167f44f4964e6c998dee827110c
   expiration: 1800000
