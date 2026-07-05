@@ -1450,7 +1450,64 @@
               "response": []
             },
             {
-              "name": "6.1.2 USER 角色访问 → 403",
+              "name": "6.1.2 admin 改用户角色 → USER",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('token'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('token'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] token is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/user/admin/role/{{userId}}?roleValue=USER",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "user",
+                    "admin",
+                    "role",
+                    "{{userId}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "roleValue",
+                      "value": "USER"
+                    }
+                  ]
+                },
+                "description": "V10 修复: 先确保测试用户是 USER 角色 (前序 Runner 跑过 6.1.4 提权后, 用户可能仍是 ADMIN).",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "6.1.3 USER 角色访问 → 403",
               "event": [
                 {
                   "listen": "prerequest",
@@ -1510,63 +1567,6 @@
               "response": []
             },
             {
-              "name": "6.1.3 admin 改用户角色 → USER",
-              "event": [
-                {
-                  "listen": "prerequest",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('token'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('token'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] token is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
-                    ]
-                  }
-                },
-                {
-                  "listen": "test",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
-                      "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });"
-                    ]
-                  }
-                }
-              ],
-              "request": {
-                "method": "PUT",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "url": {
-                  "raw": "{{baseUrl}}/api/user/admin/role/{{userId}}?roleValue=USER",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "api",
-                    "user",
-                    "admin",
-                    "role",
-                    "{{userId}}"
-                  ],
-                  "query": [
-                    {
-                      "key": "roleValue",
-                      "value": "USER"
-                    }
-                  ]
-                },
-                "description": "将测试用户改回 USER 角色。",
-                "auth": {
-                  "type": "noauth"
-                }
-              },
-              "response": []
-            },
-            {
               "name": "6.1.4 admin 改用户角色 → ADMIN",
               "event": [
                 {
@@ -1617,6 +1617,63 @@
                   ]
                 },
                 "description": "把测试用户临时提权 ADMIN, 便于 6.6 测试 mq events 接口。",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "6.1.5 admin 改用户角色 → USER (清理)",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('token'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('token'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] token is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/user/admin/role/{{userId}}?roleValue=USER",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "user",
+                    "admin",
+                    "role",
+                    "{{userId}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "roleValue",
+                      "value": "USER"
+                    }
+                  ]
+                },
+                "description": "V10 修复: 6.1.4 提权后, 显式降回 USER, 保证 6.2.5/6.3.4/6.4.3/6.5.4/6.6.2 这 5 个 USER 角色测试的用户状态干净.",
                 "auth": {
                   "type": "noauth"
                 }
