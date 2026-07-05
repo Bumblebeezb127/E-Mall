@@ -1,183 +1,213 @@
-# E-Mall 电商微服务系统
+# E-Mall 电商微服务系统 (Windows)
 
-基于 Spring Cloud Alibaba + Vue 3 的电商微服务实践项目。后端拆分为 5 个 Spring Boot 服务，通过 Nacos 做服务治理、Sentinel 做流量控制、OpenFeign 做服务调用；前端是 Vue 3 + Vite + Element Plus 单页应用。
+> 基于 Spring Cloud Alibaba + RabbitMQ + Vue 3 的电商微服务实践。
+> 本 README **仅针对 Windows**，其他系统请自行调整命令。
 
-## 技术栈
+---
 
-| 类别 | 选型 |
-|------|------|
-| 后端框架 | Spring Boot 2.7 / Spring Cloud 2021 / Spring Cloud Alibaba 2021 |
-| 服务治理 | Nacos (注册中心 + 配置中心) |
-| 服务调用 | OpenFeign + Spring Cloud LoadBalancer |
-| 流量控制 | Sentinel |
-| API 网关 | Spring Cloud Gateway |
-| 认证鉴权 | JWT (jjwt 0.9.1) |
-| 持久层 | MyBatis-Plus + MySQL 8 |
-| 前端 | Vue 3 + Vite + Pinia + Vue Router + Axios + Element Plus |
+## 1. 端口分配 (启动前请确认未被占用)
 
-## 模块概览
-
-| 模块 | 端口 | 职责 |
+| 端口 | 用途 | 备注 |
 |------|------|------|
-| `gateway` | **9000** | API 网关，唯一对外入口，路由转发 + JWT 鉴权 + Sentinel 限流 |
-| `user-service` | 8081 | 用户服务，注册/登录、JWT 签发 |
-| `product-service` | 8082 | 商品服务，商品 CRUD、分页查询、库存同步 |
-| `order-service` | 8083 | 订单服务，下单/支付/取消，通过 Feign 调用 product + inventory |
-| `inventory-service` | 8084 | 库存服务，库存查询/扣减/回滚，乐观锁防超卖 |
+| **9000** | API 网关 (Gateway) | 唯一对外入口 |
+| 8081 | user-service | 用户 / 鉴权 |
+| 8082 | product-service | 商品 |
+| 8083 | order-service | 订单 / MQ 发布 |
+| 8084 | inventory-service | 库存 |
+| 8085 | log-service | 日志查看 (Admin) |
+| 8848 | Nacos 控制台 | nacos / nacos |
+| 8858 | Sentinel Dashboard | - |
+| 15672 | RabbitMQ 管理界面 | guest / guest |
+| 5672 | RabbitMQ AMQP | - |
+| 3306 | MySQL 8 | - |
 
-> ⚠️ 端口 8080 已被 Trae IDE 占用，故网关改用 9000；Sentinel Dashboard 使用 8858。
+> 8080 已被 Trae IDE 占用，故网关改用 9000。
 
-## 目录结构
+---
 
-```
-e-mall/
-├── gateway/                # API 网关模块
-├── user-service/           # 用户服务
-├── product-service/        # 商品服务
-├── inventory-service/      # 库存服务
-├── order-service/          # 订单服务
-├── easybuy-frontend/       # Vue 3 前端项目
-├── sql/                    # 数据库脚本 (init.sql / upgrade.sql)
-├── scripts/                # 启动/停止/配置推送等运维脚本
-├── postman/                # Postman 接口集合
-├── jmeter/                 # JMeter 性能测试脚本
-├── pom.xml                 # Maven 父 POM
-└── README.md
-```
+## 2. 环境依赖
 
-## 1. 环境准备
+| 依赖 | 版本 | 验证命令 |
+|------|------|----------|
+| JDK | 17+ | `java -version` |
+| Maven | 3.6+ | `mvn -v` |
+| MySQL | 8.0+ | `mysql --version` |
+| Nacos | 2.x | 启动后访问 `http://localhost:8848/nacos` |
+| RabbitMQ | 3.x | 启动后访问 `http://localhost:15672` |
+| Node.js | 16+ | `node -v` |
+| Python | 3.8+ | `python --version` (用于测试) |
 
-| 依赖 | 版本 |
-|------|------|
-| JDK | 17+ (项目使用 JDK_17.0.12) |
-| Maven | 3.6+ |
-| MySQL | 8.0+ |
-| Nacos Server | 2.x |
-| Node.js | 16+ |
+> 脚本会优先读 `JAVA_HOME` / `MAVEN_HOME` / `NODE_HOME`，缺失时再通过 `where` 自动探测。
 
-## 2. 初始化
+---
 
-### 2.1 数据库
+## 3. 初始化 (首次部署)
 
-```bash
-mysql -u root -p --default-character-set=utf8mb4 < sql/init.sql
-```
+### 3.1 启动基础设施
 
-脚本会先 `DROP` 再重建 4 个库 `db_user / db_product / db_order / db_inventory`，并创建专用账户 `emall_app / Emall@2024`，灌入 149 条初始数据。
-
-> 详细账号、数据分布、字符集问题见 [`scripts/TEST-GUIDE.md`](scripts/TEST-GUIDE.md)。
-
-### 2.2 Nacos 配置推送（可选）
-
-如使用本地 `application.yml` 默认值可跳过。如需将仓库内的 Nacos 配置推到 Nacos Server：
-
-```bash
-python scripts/push_nacos_configs.py
-```
-
-## 3. 构建
-
-### 3.1 后端
-
-```bash
-# 在项目根目录一次性编译并安装所有模块到本地 Maven 仓库
-mvn clean install -DskipTests
-```
-
-构建产物在 `<module>/target/<module>-1.0.0-SNAPSHOT.jar`。
-
-### 3.2 前端
-
-```bash
-cd easybuy-frontend
-npm install
-```
-
-## 4. 运行
-
-### 4.1 启动 Nacos
-
-```bash
-# Linux / macOS
-sh nacos/bin/startup.sh -m standalone
-
-# Windows
+```cmd
+:: 1) 启动 MySQL (确保 3306 监听)
+:: 2) 启动 Nacos (standalone)
 nacos\bin\startup.cmd -m standalone
+
+:: 3) 启动 RabbitMQ (如未启动)
+::    默认 guest/guest, 端口 5672 + 15672
 ```
 
-控制台：<http://localhost:8848/nacos> （`nacos / nacos`）
+### 3.2 初始化数据库
 
-### 4.2 启动后端（任选其一）
+```cmd
+mysql -u root -p --default-character-set=utf8mb4 < sql\init.sql
+mysql -u root -p < sql\upgrade.sql
+```
 
-**方式 A：一键脚本（推荐）**
+### 3.3 一键前端初始化 (推荐)
 
-```bash
-# Windows
+```cmd
+scripts\frontend-init.bat
+```
+
+> 该脚本自动完成: Node 探测 → `npm install` → Nacos 配置推送 → 数据库升级。
+
+### 3.4 一键后端编译
+
+```cmd
+scripts\mvn-build.bat
+```
+
+> 该脚本自动完成: JDK / Maven 探测 → `mvn clean install -DskipTests`。
+
+---
+
+## 4. 启动 / 停止服务
+
+### 4.1 启动全部 6 个微服务
+
+```cmd
 scripts\start-all-services.bat
-
-# 或 Python 版（跨平台）
-python scripts/start_services.py
 ```
 
-**方式 B：手动启动**
+> 后台启动 user / product / inventory / order / log / gateway，
+> 启动顺序: user → product → inventory → order → log → gateway。
 
-按依赖顺序在各模块目录执行 `mvn spring-boot:run`，或用 IDE 启动各模块的 `*Application.java`。
+### 4.2 健康检查
 
-启动顺序：`user-service` → `product-service` → `inventory-service` → `order-service` → `gateway`
-
-```bash
-# user-service
-cd user-service && mvn spring-boot:run
-# 另起终端
-cd product-service && mvn spring-boot:run
-# 另起终端
-cd inventory-service && mvn spring-boot:run
-# 另起终端
-cd order-service && mvn spring-boot:run
-# 另起终端
-cd gateway && mvn spring-boot:run
+```cmd
+:: 网关 + 商品列表 (无需 token)
+curl http://localhost:9000/api/product/list?page=1&size=5
 ```
 
-**停止所有服务：**
+应返回 HTTP 200 + 商品 JSON 数组。
 
-```bash
-python scripts/stop_services.py
+### 4.3 停止全部服务
+
+```cmd
+scripts\stop-all-services.bat
 ```
 
-### 4.3 启动前端
+---
 
-```bash
+## 5. 启动前端
+
+```cmd
 cd easybuy-frontend
 npm run dev
 ```
 
-默认访问：<http://localhost:3000>（Vite 配置）
+浏览器打开: <http://localhost:3000>
 
-### 4.4 健康检查
+测试账号:
+- 管理员: `admin` / `admin123`
+- 普通用户: 在前端注册页自注册 (用户名 `tester_<时间戳>`, 密码任意)
 
-| 服务 | 端点 |
-|------|------|
-| 网关 | <http://localhost:9000/api/product/list?page=1&size=5> |
-| 用户 | <http://localhost:8081/actuator/health> |
-| 商品 | <http://localhost:8082/actuator/health> |
-| 订单 | <http://localhost:8083/actuator/health> |
-| 库存 | <http://localhost:8084/actuator/health> |
-| Nacos | <http://localhost:8848/nacos> |
+---
 
-## 5. 快速验证
+## 6. 验证
 
-```bash
-# 登录获取 token
-curl -X POST http://localhost:9000/api/user/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"admin123"}'
+### 6.1 自动化测试 (Python)
 
-# 通过网关拉取商品列表（白名单，无需 token）
-curl http://localhost:9000/api/product/list?page=1&size=12
+```cmd
+:: 交互模式 (默认): 每按一次回车跑一个测试
+scripts\run-all-tests.bat
+
+:: 一次性跑完全部
+scripts\run-all-tests.bat --all
 ```
 
-完整接口见 [`postman/E-Mall-API-Collection.json`](postman/E-Mall-API-Collection.json)。
+| 脚本 | 用例数 | 说明 |
+|------|--------|------|
+| test_product_stock_sync.py | 1 | 商品冗余库存同步 |
+| test_cancel_restore_stock.py | 3 | 取消订单库存回滚 |
+| sentinel_test.py | 4 | 限流 / 熔断 |
+| rabbitmq_test.py | 11 | 消息端到端 |
+| admin_test.py | 21 | Admin RBAC |
+| integration_test.py | 12 | 鉴权 + 下单 |
+| api_test.py | 16 | API 端到端 |
+| **Python 小计** | **68** | 全过 |
 
-## License
+> 前端另有 6 项 Vitest 单元测试 (`easybuy-frontend\tests\`),
+> 全项目测试用例合计 **74** 项, 全部通过。
 
-MIT
+详细日志: `test\results\*.log`
+
+### 6.2 RabbitMQ 持续观察 (供 Postman / JMeter 配合)
+
+```cmd
+scripts\rabbitmq-observe.bat
+```
+
+> 持续创建 / 支付 / 取消订单, 让 RabbitMQ 一直有消息流过。
+> 浏览器打开 <http://localhost:15672> (guest/guest) 即可看到
+> Exchange `emall.order.exchange` 上的实时消息。
+> 按 **Ctrl+C** 退出。
+
+### 6.3 接口测试清单 (Postman / JMeter 团队)
+
+参见 [`doc\TEST-CHECKLIST.md`](doc/TEST-CHECKLIST.md) — 涵盖 5 模块 + Admin + Sentinel + RabbitMQ + JMeter 压测建议。
+
+---
+
+## 7. 常用访问地址
+
+| 服务 | 地址 | 凭证 |
+|------|------|------|
+| 前端 SPA | <http://localhost:3000> | - |
+| API 网关 | <http://localhost:9000> | - |
+| Nacos 控制台 | <http://localhost:8848/nacos> | nacos / nacos |
+| Sentinel Dashboard | <http://localhost:8858> | - |
+| RabbitMQ Management | <http://localhost:15672> | guest / guest |
+
+---
+
+## 8. 完整文档
+
+| 文档 | 路径 |
+|------|------|
+| 需求规格说明书 | `doc\01-需求规格说明书.docx` |
+| 系统设计文档 | `doc\02-系统设计文档.docx` |
+| 部署文档 | `doc\03-部署文档.docx` |
+| 测试报告 | `doc\04-测试报告.docx` |
+| 项目总结报告 | `doc\05-项目总结报告.docx` |
+| 项目报告 (汇总) | `doc\06-项目报告.docx` |
+| 接口测试清单 | `doc\TEST-CHECKLIST.md` |
+
+---
+
+## 9. 目录结构
+
+```
+e-mall\
+├── gateway\                API 网关
+├── user-service\           用户服务
+├── product-service\        商品服务
+├── inventory-service\      库存服务
+├── order-service\          订单服务 (含 RabbitMQ 发布)
+├── log-service\            日志服务 (含 RabbitMQ 消费)
+├── easybuy-frontend\       Vue 3 前端
+├── sql\                    init.sql / upgrade.sql
+├── scripts\                启动 / 停止 / 编译 / 观察 / 测试脚本
+├── test\                   Python 自动化测试
+├── doc\                    项目文档
+├── pom.xml                 Maven 父 POM
+└── README.md
+```
