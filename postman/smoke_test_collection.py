@@ -62,18 +62,34 @@ def send_request(item, vars_, subst):
         )
         url = base + "?" + encoded_qs
 
-    # auth
-    headers = {}
-    auth = req.get("auth", {})
-    if auth.get("type") == "bearer":
-        b = auth.get("bearer", [])
-        for entry in b:
-            if entry.get("key") == "token":
-                t = subst(entry.get("value", ""))
-                headers["Authorization"] = t
-                break
+    # V7 修复核心:
+    # 1. 正常遍历 headers 加入 dict (含 Content-Type 等)
+    # 2. 对 'Authorization: Bearer {{xxx}}' 模板, **跳过** (因为 Postman V7 改用 pre-request 注入, 模板会被 req() 剥掉)
+    # 3. 从 pre-request event 中找变量名, 从 vars_ 取值, 设置 Authorization header
+    headers: Dict[str, str] = {}
     for h in req.get("header", []):
-        headers[h["key"]] = subst(h.get("value", ""))
+        hv = subst(h.get("value", ""))
+        # V7: 跳过 Bearer {{xxx}} 模板 (req() 已剥除, 这里不应该再看到; 防御性)
+        if h["key"] == "Authorization" and "Bearer {{" in str(hv):
+            continue
+        headers[h["key"]] = hv
+    # V7: 模拟 Postman pre-request 里的 Authorization header 注入逻辑
+    for ev in item.get("event", []):
+        if ev.get("listen") != "prerequest":
+            continue
+        for line in ev.get("script", {}).get("exec", []):
+            if "Authorization" not in line or ".get(" not in line:
+                continue
+            m = re.search(r"pm\.(?:environment|collectionVariables)\.get\(['\"](\w+)['\"]\)", line)
+            if not m:
+                continue
+            var_name = m.group(1)
+            tok = vars_.get(var_name) or ""
+            if tok:
+                headers["Authorization"] = "Bearer " + tok
+            break
+        if "Authorization" in headers:
+            break
 
     body = None
     if req.get("body", {}).get("mode") == "raw":
@@ -190,6 +206,9 @@ def main():
             print(f"  [ERROR] {label} - {e}")
             failed += 1
             continue
+        # Diagnostic: 1.2-1.7, 4.1 - 跑前
+        if any(name.startswith(p) for p in ("1.2 ", "1.3 ", "1.4 ", "1.5 ", "1.6 ", "1.7 ", "2.1 ", "4.1 ")):
+            print(f"  [DIAG] {label} - code={code} token={vars_.get('token','')[:15]!r} userToken={vars_.get('userToken','')[:15]!r}")
 
         # Run the test event and capture save_var side effects
         test_events = [e for e in it.get("event", []) if e.get("listen") == "test"]
@@ -200,7 +219,7 @@ def main():
                 m = re.search(r"pm\.collectionVariables\.set\(['\"]([^'\"]+)['\"]", line)
                 if m and m.group(1) in ("token", "userToken", "userId", "adminId", "productId",
                                         "newProductId", "orderId", "paidOrderId",
-                                        "cancelOrderId", "mqOrderId", "mqCancelId", "logFilePath"):
+                                        "cancelOrderId", "mqOrderId", "mqCancelId", "logFileName"):
                     var_name = m.group(1)
                     # The path is in the same line (multi-line string with embedded \n).
                     # save_var uses __tokens = ("data.token").match(...), so the path is

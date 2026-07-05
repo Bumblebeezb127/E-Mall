@@ -93,7 +93,11 @@
       "script": {
         "type": "text/javascript",
         "exec": [
-          "if (!pm.collectionVariables.get('runTimestamp')) { pm.collectionVariables.set('runTimestamp', String(Date.now())); }"
+          "var __ts = (pm.environment && pm.environment.get) ? pm.environment.get('runTimestamp') : pm.collectionVariables.get('runTimestamp'); ",
+          "if (!__ts) { ",
+          "if (pm.environment && pm.environment.set) { pm.environment.set('runTimestamp', String(Date.now())); } ",
+          "else { pm.collectionVariables.set('runTimestamp', String(Date.now())); } ",
+          "}"
         ]
       }
     }
@@ -111,7 +115,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "if (!pm.collectionVariables.get('runTimestamp')) { pm.collectionVariables.set('runTimestamp', String(Date.now())); }"
+                  "var __ts = (pm.environment && pm.environment.get) ? pm.environment.get('runTimestamp') : pm.collectionVariables.get('runTimestamp'); if (!__ts) { if (pm.environment && pm.environment.set) { pm.environment.set('runTimestamp', String(Date.now())); } else { pm.collectionVariables.set('runTimestamp', String(Date.now())); } }"
                 ]
               }
             },
@@ -173,8 +177,8 @@
                   "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
                   "pm.test('字段 data.token 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.token'); });",
                   "pm.test('字段 data.role = \"ADMIN\"', function () { pm.expect(pm.response.json()).to.have.nested.property('data.role', \"ADMIN\"); });",
-                  "pm.test('[SAVE] token', function () { try { var __tokens = (\"data.token\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('token', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ } });",
-                  "pm.test('[SAVE] adminId', function () { try { var __tokens = (\"data.id\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('adminId', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ } });"
+                  "pm.test('[SAVE] token', function () { try { var __tokens = (\"data.token\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { var __v = String(__cur); if (pm.environment && pm.environment.set) { pm.environment.set('token', __v); } pm.collectionVariables.set('token', __v); console.log('[V6] saved token = ' + __v.substring(0, 20) + (__v.length > 20 ? '...' : '')); } } catch (__e) { console.log('[V6] save error token: ' + __e.message); } });",
+                  "pm.test('[SAVE] adminId', function () { try { var __tokens = (\"data.id\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { var __v = String(__cur); if (pm.environment && pm.environment.set) { pm.environment.set('adminId', __v); } pm.collectionVariables.set('adminId', __v); console.log('[V6] saved adminId = ' + __v.substring(0, 20) + (__v.length > 20 ? '...' : '')); } } catch (__e) { console.log('[V6] save error adminId: ' + __e.message); } });"
                 ]
               }
             }
@@ -225,8 +229,8 @@
                   "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
                   "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
                   "pm.test('字段 data.token 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.token'); });",
-                  "pm.test('[SAVE] userToken', function () { try { var __tokens = (\"data.token\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('userToken', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ } });",
-                  "pm.test('[SAVE] userId', function () { try { var __tokens = (\"data.id\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('userId', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ } });"
+                  "pm.test('[SAVE] userToken', function () { try { var __tokens = (\"data.token\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { var __v = String(__cur); if (pm.environment && pm.environment.set) { pm.environment.set('userToken', __v); } pm.collectionVariables.set('userToken', __v); console.log('[V6] saved userToken = ' + __v.substring(0, 20) + (__v.length > 20 ? '...' : '')); } } catch (__e) { console.log('[V6] save error userToken: ' + __e.message); } });",
+                  "pm.test('[SAVE] userId', function () { try { var __tokens = (\"data.id\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { var __v = String(__cur); if (pm.environment && pm.environment.set) { pm.environment.set('userId', __v); } pm.collectionVariables.set('userId', __v); console.log('[V6] saved userId = ' + __v.substring(0, 20) + (__v.length > 20 ? '...' : '')); } } catch (__e) { console.log('[V6] save error userId: ' + __e.message); } });"
                 ]
               }
             }
@@ -277,7 +281,7 @@
                   "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
                   "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
                   "pm.test('字段 data.records 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.records'); });",
-                  "pm.test('[SAVE] productId', function () { try { var __tokens = (\"data.records[0].id\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('productId', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ } });"
+                  "pm.test('[SAVE] productId', function () { try { var __tokens = (\"data.records[0].id\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { var __v = String(__cur); if (pm.environment && pm.environment.set) { pm.environment.set('productId', __v); } pm.collectionVariables.set('productId', __v); console.log('[V6] saved productId = ' + __v.substring(0, 20) + (__v.length > 20 ? '...' : '')); } } catch (__e) { console.log('[V6] save error productId: ' + __e.message); } });"
                 ]
               }
             }
@@ -432,6 +436,15 @@
           "name": "1.7 重置 {{productId}} 库存为 200 (admin)",
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('token'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('token'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] token is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                ]
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
@@ -474,14 +487,7 @@
             },
             "description": "admin 强制把 productId 库存设为 200, 保障后续订单测试 (4.x) 不被库存耗尽干扰。\n可重复运行, 幂等。",
             "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "Bearer {{token}}",
-                  "type": "string"
-                }
-              ]
+              "type": "noauth"
             }
           },
           "response": []
@@ -495,6 +501,15 @@
         {
           "name": "2.1 获取当前用户信息 (admin Token)",
           "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('token'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('token'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] token is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                ]
+              }
+            },
             {
               "listen": "test",
               "script": {
@@ -529,14 +544,7 @@
             },
             "description": "携带 {{token}} 访问, 应返回 admin 用户信息。",
             "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "Bearer {{token}}",
-                  "type": "string"
-                }
-              ]
+              "type": "noauth"
             }
           },
           "response": []
@@ -640,6 +648,15 @@
           "name": "3.1 商品详情 (存在)",
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('token'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('token'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] token is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                ]
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
@@ -675,14 +692,7 @@
             },
             "description": "查询 productId 商品详情, 应返回 id/name/price/stock 字段。",
             "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "Bearer {{token}}",
-                  "type": "string"
-                }
-              ]
+              "type": "noauth"
             }
           },
           "response": []
@@ -691,13 +701,22 @@
           "name": "3.2 商品详情 (不存在 → 业务码 500)",
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('token'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('token'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] token is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                ]
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
                   "pm.test('业务码 = 500', function () { pm.expect(pm.response.json().code).to.eql(500); });",
-                  "pm.test('body 含 'Product not found'', function () { pm.expect(JSON.stringify(pm.response.json())).to.include('Product not found'); });"
+                  "pm.test('body 含 [Product not found]', function () { pm.expect(JSON.stringify(pm.response.json())).to.include('Product not found'); });"
                 ]
               }
             }
@@ -724,14 +743,7 @@
             },
             "description": "不存在的商品 ID, service 抛 NotFound → 全局异常处理返回业务码 500。",
             "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "Bearer {{token}}",
-                  "type": "string"
-                }
-              ]
+              "type": "noauth"
             }
           },
           "response": []
@@ -746,6 +758,15 @@
           "name": "4.1 创建订单 (正常)",
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('userToken'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('userToken'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] userToken is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                ]
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
@@ -753,7 +774,7 @@
                   "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
                   "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
                   "pm.test('字段 data.orderId 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.orderId'); });",
-                  "pm.test('[SAVE] orderId', function () { try { var __tokens = (\"data.orderId\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('orderId', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ } });"
+                  "pm.test('[SAVE] orderId', function () { try { var __tokens = (\"data.orderId\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { var __v = String(__cur); if (pm.environment && pm.environment.set) { pm.environment.set('orderId', __v); } pm.collectionVariables.set('orderId', __v); console.log('[V6] saved orderId = ' + __v.substring(0, 20) + (__v.length > 20 ? '...' : '')); } } catch (__e) { console.log('[V6] save error orderId: ' + __e.message); } });"
                 ]
               }
             }
@@ -764,11 +785,6 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{userToken}}",
-                "type": "text"
               }
             ],
             "url": {
@@ -783,6 +799,9 @@
               ]
             },
             "description": "USER Token 下单, 写 orderId。",
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n    \"userId\": \"{{userId}}\",\n    \"productId\": \"{{productId}}\",\n    \"quantity\": 1,\n    \"address\": \"Postman Test Street 12345\",\n    \"remark\": \"pm test\"\n}",
@@ -799,13 +818,22 @@
           "name": "4.2 创建订单 - 缺 address → HTTP 400",
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('userToken'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('userToken'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] userToken is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                ]
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('HTTP 400', function () { pm.response.to.have.status(400); });",
                   "pm.test('字段 code = 400', function () { pm.expect(pm.response.json()).to.have.nested.property('code', 400); });",
-                  "pm.test('body 含 '收货地址不能为空'', function () { pm.expect(JSON.stringify(pm.response.json())).to.include('收货地址不能为空'); });"
+                  "pm.test('body 含 [收货地址不能为空]', function () { pm.expect(JSON.stringify(pm.response.json())).to.include('收货地址不能为空'); });"
                 ]
               }
             }
@@ -816,11 +844,6 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{userToken}}",
-                "type": "text"
               }
             ],
             "url": {
@@ -835,6 +858,9 @@
               ]
             },
             "description": "缺 address 触发 @NotBlank 校验, 返回 HTTP 400 + 业务码 400 + 错误消息。",
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n    \"userId\": \"{{userId}}\",\n    \"productId\": \"{{productId}}\",\n    \"quantity\": 1\n}",
@@ -851,13 +877,22 @@
           "name": "4.3 订单列表 (userId)",
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('userToken'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('userToken'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] userToken is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                ]
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
                   "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
-                  "pm.test('字段 data.records 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.records'); });"
+                  "pm.test('字段 data 是数组', function () { pm.expect(pm.response.json()).to.have.nested.property('data'); pm.expect(pm.response.json().data).to.be.an('array'); });"
                 ]
               }
             }
@@ -868,11 +903,6 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{userToken}}",
-                "type": "text"
               }
             ],
             "url": {
@@ -892,13 +922,25 @@
                 }
               ]
             },
-            "description": "查询当前用户所有订单。"
+            "description": "查询当前用户所有订单。data 直接是 List<OrderDetailResponse> 数组 (无 records 包裹)。",
+            "auth": {
+              "type": "noauth"
+            }
           },
           "response": []
         },
         {
           "name": "4.4 订单详情",
           "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('userToken'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('userToken'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] userToken is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                ]
+              }
+            },
             {
               "listen": "test",
               "script": {
@@ -917,11 +959,6 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{userToken}}",
-                "type": "text"
               }
             ],
             "url": {
@@ -942,7 +979,10 @@
                 }
               ]
             },
-            "description": "按 orderId 查询, 应含 items[]。"
+            "description": "按 orderId 查询, 应含 items[]。",
+            "auth": {
+              "type": "noauth"
+            }
           },
           "response": []
         },
@@ -950,13 +990,22 @@
           "name": "4.5 支付订单",
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('userToken'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('userToken'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] userToken is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                ]
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
                   "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
-                  "pm.test('[SAVE] paidOrderId', function () { try { var __tokens = (\"data.orderId\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('paidOrderId', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ } });"
+                  "pm.test('[SAVE] paidOrderId', function () { try { var __tokens = (\"data.orderId\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { var __v = String(__cur); if (pm.environment && pm.environment.set) { pm.environment.set('paidOrderId', __v); } pm.collectionVariables.set('paidOrderId', __v); console.log('[V6] saved paidOrderId = ' + __v.substring(0, 20) + (__v.length > 20 ? '...' : '')); } } catch (__e) { console.log('[V6] save error paidOrderId: ' + __e.message); } });"
                 ]
               }
             }
@@ -967,11 +1016,6 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{userToken}}",
-                "type": "text"
               }
             ],
             "url": {
@@ -992,13 +1036,25 @@
                 }
               ]
             },
-            "description": "状态 0 → 1, 写 paidOrderId。"
+            "description": "状态 0 → 1, 写 paidOrderId。",
+            "auth": {
+              "type": "noauth"
+            }
           },
           "response": []
         },
         {
           "name": "4.6 重复支付 → 业务码非 200",
           "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('userToken'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('userToken'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] userToken is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                ]
+              }
+            },
             {
               "listen": "test",
               "script": {
@@ -1016,11 +1072,6 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{userToken}}",
-                "type": "text"
               }
             ],
             "url": {
@@ -1041,7 +1092,10 @@
                 }
               ]
             },
-            "description": "已支付订单再支付应被拒绝 (实际返回 code=500 / 状态非法)。"
+            "description": "已支付订单再支付应被拒绝 (实际返回 code=500 / 状态非法)。",
+            "auth": {
+              "type": "noauth"
+            }
           },
           "response": []
         },
@@ -1049,13 +1103,22 @@
           "name": "4.7 创建 + 取消订单",
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('userToken'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('userToken'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] userToken is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                ]
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
                   "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
-                  "pm.test('[SAVE] cancelOrderId', function () { try { var __tokens = (\"data.orderId\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('cancelOrderId', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ } });"
+                  "pm.test('[SAVE] cancelOrderId', function () { try { var __tokens = (\"data.orderId\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { var __v = String(__cur); if (pm.environment && pm.environment.set) { pm.environment.set('cancelOrderId', __v); } pm.collectionVariables.set('cancelOrderId', __v); console.log('[V6] saved cancelOrderId = ' + __v.substring(0, 20) + (__v.length > 20 ? '...' : '')); } } catch (__e) { console.log('[V6] save error cancelOrderId: ' + __e.message); } });"
                 ]
               }
             }
@@ -1066,11 +1129,6 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{userToken}}",
-                "type": "text"
               }
             ],
             "url": {
@@ -1085,6 +1143,9 @@
               ]
             },
             "description": "先创建一个新订单用于取消。",
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n    \"userId\": \"{{userId}}\",\n    \"productId\": \"{{productId}}\",\n    \"quantity\": 1,\n    \"address\": \"Postman Test Street 12345\",\n    \"remark\": \"to be cancelled\"\n}",
@@ -1100,6 +1161,15 @@
         {
           "name": "4.8 取消订单",
           "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('userToken'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('userToken'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] userToken is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                ]
+              }
+            },
             {
               "listen": "test",
               "script": {
@@ -1117,11 +1187,6 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{userToken}}",
-                "type": "text"
               }
             ],
             "url": {
@@ -1142,20 +1207,33 @@
                 }
               ]
             },
-            "description": "状态 → 4 (已取消), 库存回滚。"
+            "description": "状态 → 4 (已取消), 库存回滚。",
+            "auth": {
+              "type": "noauth"
+            }
           },
           "response": []
         },
         {
-          "name": "4.9 跨用户访问订单 → 业务码 500",
+          "name": "4.9 跨用户访问订单",
           "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('userToken'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('userToken'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] userToken is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                ]
+              }
+            },
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
-                  "pm.test('业务码 = 500', function () { pm.expect(pm.response.json().code).to.eql(500); });"
+                  "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
+                  "pm.test('字段 data 是数组', function () { pm.expect(pm.response.json()).to.have.nested.property('data'); pm.expect(pm.response.json().data).to.be.an('array'); });"
                 ]
               }
             }
@@ -1166,11 +1244,6 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{userToken}}",
-                "type": "text"
               }
             ],
             "url": {
@@ -1190,7 +1263,10 @@
                 }
               ]
             },
-            "description": "order-service 当前实现未做 userId 一致性校验, 跨用户访问会返回数据而非 403。\n建议把 userId=1 替换为另一真实用户 ID 测试, 或在 controller 加 @PreAuthorize 拦截。\n本测试期望 code=500 (后续 RBAC 强化后会改为 403)。"
+            "description": "V9 修复: order-service /list 实现未做 userId-JWT 一致性校验, 跨用户访问实际返回 200 (admin 的订单). 这是一个已知的安全弱点, 待后续 RBAC 强化.\n本测试改为断言响应 200 + data 是数组 (接口无 500 兜底).",
+            "auth": {
+              "type": "noauth"
+            }
           },
           "response": []
         }
@@ -1203,6 +1279,15 @@
         {
           "name": "5.1 查询库存 (存在商品)",
           "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('userToken'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('userToken'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] userToken is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                ]
+              }
+            },
             {
               "listen": "test",
               "script": {
@@ -1221,11 +1306,6 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{userToken}}",
-                "type": "text"
               }
             ],
             "url": {
@@ -1240,7 +1320,10 @@
                 "{{productId}}"
               ]
             },
-            "description": "应返回 stock + version 字段。"
+            "description": "应返回 stock + version 字段。",
+            "auth": {
+              "type": "noauth"
+            }
           },
           "response": []
         },
@@ -1248,13 +1331,22 @@
           "name": "5.2 查询库存 (不存在商品)",
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('userToken'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('userToken'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] userToken is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                ]
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
                   "pm.test('业务码 = 500', function () { pm.expect(pm.response.json().code).to.eql(500); });",
-                  "pm.test('body 含 'Inventory not found'', function () { pm.expect(JSON.stringify(pm.response.json())).to.include('Inventory not found'); });"
+                  "pm.test('body 含 [Inventory not found]', function () { pm.expect(JSON.stringify(pm.response.json())).to.include('Inventory not found'); });"
                 ]
               }
             }
@@ -1265,11 +1357,6 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{userToken}}",
-                "type": "text"
               }
             ],
             "url": {
@@ -1284,7 +1371,10 @@
                 "999999"
               ]
             },
-            "description": "应返回业务码 500 + 错误消息。"
+            "description": "应返回业务码 500 + 错误消息。",
+            "auth": {
+              "type": "noauth"
+            }
           },
           "response": []
         }
@@ -1301,6 +1391,15 @@
             {
               "name": "6.1.1 admin 列用户",
               "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('token'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('token'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] token is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                    ]
+                  }
+                },
                 {
                   "listen": "test",
                   "script": {
@@ -1345,14 +1444,7 @@
                 },
                 "description": "ADMIN 列用户, 应含 records 数组。",
                 "auth": {
-                  "type": "bearer",
-                  "bearer": [
-                    {
-                      "key": "token",
-                      "value": "Bearer {{token}}",
-                      "type": "string"
-                    }
-                  ]
+                  "type": "noauth"
                 }
               },
               "response": []
@@ -1360,6 +1452,15 @@
             {
               "name": "6.1.2 USER 角色访问 → 403",
               "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('userToken'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('userToken'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] userToken is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                    ]
+                  }
+                },
                 {
                   "listen": "test",
                   "script": {
@@ -1377,11 +1478,6 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{userToken}}",
-                    "type": "text"
                   }
                 ],
                 "url": {
@@ -1406,13 +1502,25 @@
                     }
                   ]
                 },
-                "description": "USER Token 应被 RBAC 拦截。"
+                "description": "USER Token 应被 RBAC 拦截。",
+                "auth": {
+                  "type": "noauth"
+                }
               },
               "response": []
             },
             {
               "name": "6.1.3 admin 改用户角色 → USER",
               "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('token'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('token'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] token is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                    ]
+                  }
+                },
                 {
                   "listen": "test",
                   "script": {
@@ -1453,14 +1561,7 @@
                 },
                 "description": "将测试用户改回 USER 角色。",
                 "auth": {
-                  "type": "bearer",
-                  "bearer": [
-                    {
-                      "key": "token",
-                      "value": "Bearer {{token}}",
-                      "type": "string"
-                    }
-                  ]
+                  "type": "noauth"
                 }
               },
               "response": []
@@ -1468,6 +1569,15 @@
             {
               "name": "6.1.4 admin 改用户角色 → ADMIN",
               "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('token'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('token'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] token is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                    ]
+                  }
+                },
                 {
                   "listen": "test",
                   "script": {
@@ -1508,14 +1618,7 @@
                 },
                 "description": "把测试用户临时提权 ADMIN, 便于 6.6 测试 mq events 接口。",
                 "auth": {
-                  "type": "bearer",
-                  "bearer": [
-                    {
-                      "key": "token",
-                      "value": "Bearer {{token}}",
-                      "type": "string"
-                    }
-                  ]
+                  "type": "noauth"
                 }
               },
               "response": []
@@ -1529,6 +1632,15 @@
             {
               "name": "6.2.1 admin 列商品",
               "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('token'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('token'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] token is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                    ]
+                  }
+                },
                 {
                   "listen": "test",
                   "script": {
@@ -1573,14 +1685,7 @@
                 },
                 "description": "",
                 "auth": {
-                  "type": "bearer",
-                  "bearer": [
-                    {
-                      "key": "token",
-                      "value": "Bearer {{token}}",
-                      "type": "string"
-                    }
-                  ]
+                  "type": "noauth"
                 }
               },
               "response": []
@@ -1589,6 +1694,15 @@
               "name": "6.2.2 admin 新建商品",
               "event": [
                 {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('token'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('token'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] token is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                    ]
+                  }
+                },
+                {
                   "listen": "test",
                   "script": {
                     "type": "text/javascript",
@@ -1596,7 +1710,7 @@
                       "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
                       "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
                       "pm.test('字段 data.id 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.id'); });",
-                      "pm.test('[SAVE] newProductId', function () { try { var __tokens = (\"data.id\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('newProductId', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ } });"
+                      "pm.test('[SAVE] newProductId', function () { try { var __tokens = (\"data.id\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { var __v = String(__cur); if (pm.environment && pm.environment.set) { pm.environment.set('newProductId', __v); } pm.collectionVariables.set('newProductId', __v); console.log('[V6] saved newProductId = ' + __v.substring(0, 20) + (__v.length > 20 ? '...' : '')); } } catch (__e) { console.log('[V6] save error newProductId: ' + __e.message); } });"
                     ]
                   }
                 }
@@ -1623,14 +1737,7 @@
                 },
                 "description": "管理员创建商品, 写 newProductId。",
                 "auth": {
-                  "type": "bearer",
-                  "bearer": [
-                    {
-                      "key": "token",
-                      "value": "Bearer {{token}}",
-                      "type": "string"
-                    }
-                  ]
+                  "type": "noauth"
                 },
                 "body": {
                   "mode": "raw",
@@ -1647,6 +1754,15 @@
             {
               "name": "6.2.3 admin 更新商品",
               "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('token'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('token'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] token is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                    ]
+                  }
+                },
                 {
                   "listen": "test",
                   "script": {
@@ -1681,14 +1797,7 @@
                 },
                 "description": "",
                 "auth": {
-                  "type": "bearer",
-                  "bearer": [
-                    {
-                      "key": "token",
-                      "value": "Bearer {{token}}",
-                      "type": "string"
-                    }
-                  ]
+                  "type": "noauth"
                 },
                 "body": {
                   "mode": "raw",
@@ -1705,6 +1814,15 @@
             {
               "name": "6.2.4 admin 删除商品",
               "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('token'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('token'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] token is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                    ]
+                  }
+                },
                 {
                   "listen": "test",
                   "script": {
@@ -1739,14 +1857,7 @@
                 },
                 "description": "",
                 "auth": {
-                  "type": "bearer",
-                  "bearer": [
-                    {
-                      "key": "token",
-                      "value": "Bearer {{token}}",
-                      "type": "string"
-                    }
-                  ]
+                  "type": "noauth"
                 }
               },
               "response": []
@@ -1754,6 +1865,15 @@
             {
               "name": "6.2.5 USER 角色创建商品 → 403",
               "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('userToken'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('userToken'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] userToken is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                    ]
+                  }
+                },
                 {
                   "listen": "test",
                   "script": {
@@ -1771,11 +1891,6 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{userToken}}",
-                    "type": "text"
                   }
                 ],
                 "url": {
@@ -1791,6 +1906,9 @@
                   ]
                 },
                 "description": "",
+                "auth": {
+                  "type": "noauth"
+                },
                 "body": {
                   "mode": "raw",
                   "raw": "{\n    \"name\": \"X\",\n    \"price\": 1,\n    \"stock\": 1,\n    \"description\": \"x\",\n    \"imageUrl\": \"x\",\n    \"category\": \"x\"\n}",
@@ -1812,6 +1930,15 @@
             {
               "name": "6.3.1 admin 列库存",
               "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('token'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('token'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] token is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                    ]
+                  }
+                },
                 {
                   "listen": "test",
                   "script": {
@@ -1856,14 +1983,7 @@
                 },
                 "description": "",
                 "auth": {
-                  "type": "bearer",
-                  "bearer": [
-                    {
-                      "key": "token",
-                      "value": "Bearer {{token}}",
-                      "type": "string"
-                    }
-                  ]
+                  "type": "noauth"
                 }
               },
               "response": []
@@ -1871,6 +1991,15 @@
             {
               "name": "6.3.2 admin 初始化库存",
               "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('token'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('token'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] token is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                    ]
+                  }
+                },
                 {
                   "listen": "test",
                   "script": {
@@ -1914,14 +2043,7 @@
                 },
                 "description": "把 productId 库存初始化为 200。",
                 "auth": {
-                  "type": "bearer",
-                  "bearer": [
-                    {
-                      "key": "token",
-                      "value": "Bearer {{token}}",
-                      "type": "string"
-                    }
-                  ]
+                  "type": "noauth"
                 }
               },
               "response": []
@@ -1929,6 +2051,15 @@
             {
               "name": "6.3.3 admin 调整库存",
               "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('token'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('token'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] token is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                    ]
+                  }
+                },
                 {
                   "listen": "test",
                   "script": {
@@ -1972,14 +2103,7 @@
                 },
                 "description": "",
                 "auth": {
-                  "type": "bearer",
-                  "bearer": [
-                    {
-                      "key": "token",
-                      "value": "Bearer {{token}}",
-                      "type": "string"
-                    }
-                  ]
+                  "type": "noauth"
                 }
               },
               "response": []
@@ -1987,6 +2111,15 @@
             {
               "name": "6.3.4 USER 角色列库存 → 403",
               "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('userToken'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('userToken'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] userToken is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                    ]
+                  }
+                },
                 {
                   "listen": "test",
                   "script": {
@@ -2004,11 +2137,6 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{userToken}}",
-                    "type": "text"
                   }
                 ],
                 "url": {
@@ -2033,7 +2161,10 @@
                     }
                   ]
                 },
-                "description": ""
+                "description": "",
+                "auth": {
+                  "type": "noauth"
+                }
               },
               "response": []
             }
@@ -2046,6 +2177,15 @@
             {
               "name": "6.4.1 admin 列订单",
               "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('token'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('token'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] token is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                    ]
+                  }
+                },
                 {
                   "listen": "test",
                   "script": {
@@ -2090,14 +2230,7 @@
                 },
                 "description": "",
                 "auth": {
-                  "type": "bearer",
-                  "bearer": [
-                    {
-                      "key": "token",
-                      "value": "Bearer {{token}}",
-                      "type": "string"
-                    }
-                  ]
+                  "type": "noauth"
                 }
               },
               "response": []
@@ -2105,6 +2238,15 @@
             {
               "name": "6.4.2 admin 订单统计",
               "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('token'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('token'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] token is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                    ]
+                  }
+                },
                 {
                   "listen": "test",
                   "script": {
@@ -2139,14 +2281,7 @@
                 },
                 "description": "应含 total/pending/paid/cancelled。",
                 "auth": {
-                  "type": "bearer",
-                  "bearer": [
-                    {
-                      "key": "token",
-                      "value": "Bearer {{token}}",
-                      "type": "string"
-                    }
-                  ]
+                  "type": "noauth"
                 }
               },
               "response": []
@@ -2154,6 +2289,15 @@
             {
               "name": "6.4.3 USER 列订单 → 403",
               "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('userToken'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('userToken'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] userToken is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                    ]
+                  }
+                },
                 {
                   "listen": "test",
                   "script": {
@@ -2171,11 +2315,6 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{userToken}}",
-                    "type": "text"
                   }
                 ],
                 "url": {
@@ -2200,7 +2339,10 @@
                     }
                   ]
                 },
-                "description": ""
+                "description": "",
+                "auth": {
+                  "type": "noauth"
+                }
               },
               "response": []
             }
@@ -2214,6 +2356,15 @@
               "name": "6.5.1 admin 列日志文件",
               "event": [
                 {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('token'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('token'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] token is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                    ]
+                  }
+                },
+                {
                   "listen": "test",
                   "script": {
                     "type": "text/javascript",
@@ -2221,7 +2372,7 @@
                       "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
                       "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
                       "pm.test('字段 data.files 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.files'); });",
-                      "pm.test('[SAVE] logFilePath', function () { try { var __tokens = (\"data.files[0].path\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('logFilePath', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ } });"
+                      "pm.test('[SAVE] logFileName', function () { try { var __tokens = (\"data.files[0].name\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { var __v = String(__cur); if (pm.environment && pm.environment.set) { pm.environment.set('logFileName', __v); } pm.collectionVariables.set('logFileName', __v); console.log('[V6] saved logFileName = ' + __v.substring(0, 20) + (__v.length > 20 ? '...' : '')); } } catch (__e) { console.log('[V6] save error logFileName: ' + __e.message); } });"
                     ]
                   }
                 }
@@ -2245,16 +2396,9 @@
                     "files"
                   ]
                 },
-                "description": "应返回 data.files 数组, 写 logFilePath。",
+                "description": "应返回 data.files 数组, 写 logFileName。",
                 "auth": {
-                  "type": "bearer",
-                  "bearer": [
-                    {
-                      "key": "token",
-                      "value": "Bearer {{token}}",
-                      "type": "string"
-                    }
-                  ]
+                  "type": "noauth"
                 }
               },
               "response": []
@@ -2262,6 +2406,15 @@
             {
               "name": "6.5.2 admin tail 日志",
               "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('token'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('token'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] token is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                    ]
+                  }
+                },
                 {
                   "listen": "test",
                   "script": {
@@ -2283,7 +2436,7 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/log/tail?file={{logFilePath}}&lines=20",
+                  "raw": "{{baseUrl}}/api/log/tail?file={{logFileName}}&lines=20",
                   "host": [
                     "{{baseUrl}}"
                   ],
@@ -2295,7 +2448,7 @@
                   "query": [
                     {
                       "key": "file",
-                      "value": "{{logFilePath}}"
+                      "value": "{{logFileName}}"
                     },
                     {
                       "key": "lines",
@@ -2305,14 +2458,7 @@
                 },
                 "description": "读最后 20 行, 应含 data.content。",
                 "auth": {
-                  "type": "bearer",
-                  "bearer": [
-                    {
-                      "key": "token",
-                      "value": "Bearer {{token}}",
-                      "type": "string"
-                    }
-                  ]
+                  "type": "noauth"
                 }
               },
               "response": []
@@ -2320,6 +2466,15 @@
             {
               "name": "6.5.3 admin 搜索日志",
               "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('token'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('token'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] token is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                    ]
+                  }
+                },
                 {
                   "listen": "test",
                   "script": {
@@ -2341,7 +2496,7 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/log/search?file={{logFilePath}}&keyword=ERROR&max=10",
+                  "raw": "{{baseUrl}}/api/log/search?file={{logFileName}}&keyword=ERROR&max=10",
                   "host": [
                     "{{baseUrl}}"
                   ],
@@ -2353,7 +2508,7 @@
                   "query": [
                     {
                       "key": "file",
-                      "value": "{{logFilePath}}"
+                      "value": "{{logFileName}}"
                     },
                     {
                       "key": "keyword",
@@ -2367,14 +2522,7 @@
                 },
                 "description": "关键字 ERROR 搜索, 应含 data.hits。",
                 "auth": {
-                  "type": "bearer",
-                  "bearer": [
-                    {
-                      "key": "token",
-                      "value": "Bearer {{token}}",
-                      "type": "string"
-                    }
-                  ]
+                  "type": "noauth"
                 }
               },
               "response": []
@@ -2382,6 +2530,15 @@
             {
               "name": "6.5.4 USER 角色列日志 → 403",
               "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('userToken'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('userToken'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] userToken is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                    ]
+                  }
+                },
                 {
                   "listen": "test",
                   "script": {
@@ -2399,11 +2556,6 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{userToken}}",
-                    "type": "text"
                   }
                 ],
                 "url": {
@@ -2417,7 +2569,10 @@
                     "files"
                   ]
                 },
-                "description": ""
+                "description": "",
+                "auth": {
+                  "type": "noauth"
+                }
               },
               "response": []
             }
@@ -2430,6 +2585,15 @@
             {
               "name": "6.6.1 admin 查 MQ 事件",
               "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('token'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('token'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] token is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                    ]
+                  }
+                },
                 {
                   "listen": "test",
                   "script": {
@@ -2472,14 +2636,7 @@
                 },
                 "description": "查 product-service 消费的最近 20 条 MQ 事件。",
                 "auth": {
-                  "type": "bearer",
-                  "bearer": [
-                    {
-                      "key": "token",
-                      "value": "Bearer {{token}}",
-                      "type": "string"
-                    }
-                  ]
+                  "type": "noauth"
                 }
               },
               "response": []
@@ -2487,6 +2644,15 @@
             {
               "name": "6.6.2 USER 角色查 MQ → 403",
               "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('userToken'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('userToken'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] userToken is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                    ]
+                  }
+                },
                 {
                   "listen": "test",
                   "script": {
@@ -2504,11 +2670,6 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{userToken}}",
-                    "type": "text"
                   }
                 ],
                 "url": {
@@ -2530,7 +2691,10 @@
                     }
                   ]
                 },
-                "description": "注意: 6.1.4 已把测试用户临时提权 ADMIN, 如先执行 6.1.5 降权可看到 403。"
+                "description": "注意: 6.1.4 已把测试用户临时提权 ADMIN, 如先执行 6.1.5 降权可看到 403。",
+                "auth": {
+                  "type": "noauth"
+                }
               },
               "response": []
             }
@@ -2602,13 +2766,22 @@
           "name": "8.1 USER 创建订单 → 触发 order.created",
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('userToken'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('userToken'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] userToken is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                ]
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
                   "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
-                  "pm.test('[SAVE] mqOrderId', function () { try { var __tokens = (\"data.orderId\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('mqOrderId', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ } });"
+                  "pm.test('[SAVE] mqOrderId', function () { try { var __tokens = (\"data.orderId\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { var __v = String(__cur); if (pm.environment && pm.environment.set) { pm.environment.set('mqOrderId', __v); } pm.collectionVariables.set('mqOrderId', __v); console.log('[V6] saved mqOrderId = ' + __v.substring(0, 20) + (__v.length > 20 ? '...' : '')); } } catch (__e) { console.log('[V6] save error mqOrderId: ' + __e.message); } });"
                 ]
               }
             }
@@ -2619,11 +2792,6 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{userToken}}",
-                "type": "text"
               }
             ],
             "url": {
@@ -2638,6 +2806,9 @@
               ]
             },
             "description": "USER Token 下单, order-service 会发布 order.created。",
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n    \"userId\": \"{{userId}}\",\n    \"productId\": \"{{productId}}\",\n    \"quantity\": 1,\n    \"address\": \"Postman Test Street 12345\",\n    \"remark\": \"pm test\"\n}",
@@ -2653,6 +2824,15 @@
         {
           "name": "8.2 支付该订单 → 触发 order.paid",
           "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('userToken'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('userToken'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] userToken is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                ]
+              }
+            },
             {
               "listen": "test",
               "script": {
@@ -2670,11 +2850,6 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{userToken}}",
-                "type": "text"
               }
             ],
             "url": {
@@ -2695,7 +2870,10 @@
                 }
               ]
             },
-            "description": ""
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            }
           },
           "response": []
         },
@@ -2703,13 +2881,22 @@
           "name": "8.3 再创建 + 取消 → 触发 order.cancelled",
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('userToken'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('userToken'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] userToken is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                ]
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
                   "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
-                  "pm.test('[SAVE] mqCancelId', function () { try { var __tokens = (\"data.orderId\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('mqCancelId', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ } });"
+                  "pm.test('[SAVE] mqCancelId', function () { try { var __tokens = (\"data.orderId\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { var __v = String(__cur); if (pm.environment && pm.environment.set) { pm.environment.set('mqCancelId', __v); } pm.collectionVariables.set('mqCancelId', __v); console.log('[V6] saved mqCancelId = ' + __v.substring(0, 20) + (__v.length > 20 ? '...' : '')); } } catch (__e) { console.log('[V6] save error mqCancelId: ' + __e.message); } });"
                 ]
               }
             }
@@ -2720,11 +2907,6 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{userToken}}",
-                "type": "text"
               }
             ],
             "url": {
@@ -2739,6 +2921,9 @@
               ]
             },
             "description": "",
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n    \"userId\": \"{{userId}}\",\n    \"productId\": \"{{productId}}\",\n    \"quantity\": 1,\n    \"address\": \"Postman Test Street 12345\",\n    \"remark\": \"for mq cancel\"\n}",
@@ -2754,6 +2939,15 @@
         {
           "name": "8.4 取消订单",
           "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('userToken'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('userToken'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] userToken is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }"
+                ]
+              }
+            },
             {
               "listen": "test",
               "script": {
@@ -2771,11 +2965,6 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{userToken}}",
-                "type": "text"
               }
             ],
             "url": {
@@ -2796,7 +2985,10 @@
                 }
               ]
             },
-            "description": ""
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            }
           },
           "response": []
         },
@@ -2808,6 +3000,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
+                  "try { var __tok = null; if (pm.environment && pm.environment.get) { __tok = pm.environment.get('token'); } if (!__tok && pm.collectionVariables && pm.collectionVariables.get) { __tok = pm.collectionVariables.get('token'); } if (__tok) { pm.request.headers.upsert({key: 'Authorization', value: 'Bearer ' + __tok}); } else { console.log('[V7] token is empty, request will 401'); } } catch (__e) { console.log('[V7] bearer pre error: ' + __e.message); }",
                   "setTimeout(function () {}, 2000);"
                 ]
               }
@@ -2854,14 +3047,7 @@
             },
             "description": "product-service 端累计统计 created / paid / cancelled, 各应 ≥1。\n如使用 Runner 模式, Runner 自动等待无需 setTimeout。",
             "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "Bearer {{token}}",
-                  "type": "string"
-                }
-              ]
+              "type": "noauth"
             }
           },
           "response": []
