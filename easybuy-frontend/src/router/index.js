@@ -37,6 +37,12 @@ const routes = [
     meta: { requiresAuth: true, title: '我的订单' }
   },
   {
+    path: '/profile',
+    name: 'Profile',
+    component: () => import('@/views/Profile.vue'),
+    meta: { requiresAuth: true, title: '个人中心' }
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('@/views/NotFound.vue'),

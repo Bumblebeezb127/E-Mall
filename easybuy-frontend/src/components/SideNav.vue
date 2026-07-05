@@ -26,18 +26,35 @@
       :collapse-transition="false"
       router
     >
-      <el-menu-item index="/products" v-if="userStore.isLoggedIn">
-        <el-icon><Goods /></el-icon>
-        <template #title>商品列表</template>
-      </el-menu-item>
-      <el-menu-item index="/orders" v-if="userStore.isLoggedIn">
-        <el-icon><Tickets /></el-icon>
-        <template #title>我的订单</template>
-      </el-menu-item>
+      <template v-if="userStore.isLoggedIn">
+        <el-menu-item index="/products">
+          <el-icon><Goods /></el-icon>
+          <template #title>商品列表</template>
+        </el-menu-item>
+        <el-menu-item index="/orders">
+          <el-icon><Tickets /></el-icon>
+          <template #title>我的订单</template>
+        </el-menu-item>
+        <el-menu-item index="/profile">
+          <el-icon><User /></el-icon>
+          <template #title>个人中心</template>
+        </el-menu-item>
+      </template>
+      <template v-else>
+        <el-menu-item index="/login">
+          <el-icon><User /></el-icon>
+          <template #title>登录</template>
+        </el-menu-item>
+        <el-menu-item index="/register">
+          <el-icon><EditPen /></el-icon>
+          <template #title>注册</template>
+        </el-menu-item>
+      </template>
     </el-menu>
 
     <div class="nav-footer">
       <el-button
+        v-if="userStore.isLoggedIn"
         type="danger"
         :icon="SwitchButton"
         class="logout-btn"
@@ -62,7 +79,7 @@
 import { computed, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessageBox, ElMessage } from 'element-plus'
-import { Goods, Tickets, SwitchButton, Fold, Expand } from '@element-plus/icons-vue'
+import { Goods, Tickets, User, EditPen, SwitchButton, Fold, Expand } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/userStore'
 
 const router = useRouter()
