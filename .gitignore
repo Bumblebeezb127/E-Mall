@@ -100,3 +100,9 @@ jmeter/html/
 
 # Project-specific: exclude local Spring Boot actuator dump files
 *.heapdump
+
+# Project-specific: exclude Microsoft Office temporary lock files
+~*.docx
+~*.xlsx
+~*.pptx
+~*.tmp

@@ -11,6 +11,7 @@ from pathlib import Path
 
 BASE_DIR = Path(r"d:\Learning materials\SpringCloud\e-mall")
 LOG_DIR = BASE_DIR / "logs"
+SENTINEL_LOG_DIR = LOG_DIR / "csp"
 JDK17 = r"D:\JAVA\JAVA_JDK\JDK_17.0.12"
 
 SERVICES = [
