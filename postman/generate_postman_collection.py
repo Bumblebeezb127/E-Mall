@@ -719,8 +719,12 @@ f8 = folder("08-RabbitMQ 事件流 (端到端)", [
 # ---------------------------------------------------------------------------
 collection = {
     "info": {
-        "_postman_id": "e-mall-api-v3-full",
-        "name": "E-Mall 微服务 API 测试集 (V3 全面版)",
+        # V11 修复: collection ID 改 v3-full → v4-noauth. Postman 按 _postman_id
+        # 识别 collection, ID 相同 import 时会被认作同一集合, 不会真正更新本地副本.
+        # 用户反馈 Runner 仍跑旧版, 原因是客户端没真换 collection. 同时改 name 让
+        # 用户在侧边栏能直观看到变化, 强制删旧建新.
+        "_postman_id": "e-mall-api-v4-noauth",
+        "name": "E-Mall 微服务 API 测试集 (V4 - 无 collection auth)",
         "description": textwrap.dedent("""
             电商微服务系统完整接口测试集 (V3 全面版)。
             覆盖: 白名单 / 5 模块 / Admin 6 子模块 / Sentinel / RabbitMQ 端到端。
@@ -760,12 +764,11 @@ collection = {
         {"key": "logFileName", "value": "", "type": "string"},
         {"key": "runTimestamp", "value": "", "type": "string"},
     ],
-    "auth": {
-        "type": "bearer",
-        "bearer": [
-            {"key": "token", "value": "Bearer {{token}}", "type": "string"}
-        ],
-    },
+    # V11 修复: 不在 collection 级别设 bearer auth. Postman Runner 在 request.auth
+    # 为 noauth 简写时不识别, 会 fallback 到 collection 级别 auth (Bearer {{token}}),
+    # 把 userToken 请求错误地注入 admin token, 导致 6.1.3/6.2.5/6.3.4/6.4.3/6.5.4/6.6.2
+    # 期望 403 实际拿到 200. 彻底移除 collection.auth, 让所有请求靠 pre-request
+    # 注入 Authorization, 100% 可靠.
     "event": [
         {
             "listen": "prerequest",
