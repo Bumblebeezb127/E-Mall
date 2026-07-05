@@ -67,7 +67,7 @@
       "type": "string"
     },
     {
-      "key": "logFilePath",
+      "key": "logFileName",
       "value": "",
       "type": "string"
     },

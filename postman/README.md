@@ -42,7 +42,7 @@ python postman\smoke_test_collection.py
 - 仅依赖 Python 标准库, 无需安装 Postman
 - 自动维护 collection variables (`token` / `userId` / `productId` 等)
 - 按 Postman 集合顺序执行, 校验 HTTP 状态码 + 业务码
-- 输出 PASS / FAIL 统计 (当前实测 **51/51 PASS, 145 个断言全过**)
+- 输出 PASS / FAIL 统计 (当前实测 **51/51 PASS**)
 
 ### 单步执行 (Postman 调试)
 
@@ -65,15 +65,9 @@ python postman\smoke_test_collection.py
 | `save_var` 完全不生效 | exec 数组中多行 if 块被 Postman 拆分 | V4 已改为 `pm.test('SAVE x', function() { ... })` 函数表达式包裹 |
 | 1.1 业务码 500 | 用户名重名 (数据库已有 `pmuser_<runTimestamp>` 用户) | V4 1.1 已允许 500 (重名), 1.3 用同样用户名仍可登录 |
 | 1.7/2.1 仍 401 (即使 save_var 看起来已执行) | Postman 变量优先级 **Environment > Collection**, set 到 collection 的 token 被 environment 的空值覆盖 | V5 save_var 改用 `pm.environment.set` 优先, collection 兜底 |
-| V6 仍偶发 401 | `pm.environment.set` 写入后 Postman Runner 仍可能命中 environment 旧空值 | V6 双写: environment + collection 同步 set |
-| V6 仍 401, `{{token}}` 模板在 Runner 始终不解析 | Postman auth helper / 显式 Bearer header 的模板解析失败 | V7 终极方案: 禁用 auth helper, pre-request 用 JS API 显式取 token 后 `pm.request.headers.upsert` 注入 |
-| Postman Console 报 `post-response: SyntaxError: missing ) after argument list` | `pm.test('label 含 'xxx'...')` 单引号嵌套 | V8 修复: `t_assert_body` label 默认格式用 `[xxx]` 代替 `'xxx'` |
-| **4.x/5.x/6.x/8.x 全部 401** (V8 之后) | H_USER/H_AUTH bearer 模板被剥除后, `request.auth` 仍是 `None`, 继承 collection 级别 `Bearer {{token}}`, 覆盖了 pre-request 注入的 userToken | **V9 修复**: `req()` 检测到 bearer 模板时显式设 `request.auth = {"type": "noauth"}` |
-| **6.5.2/6.5.3 HTTP 400** | `logFilePath` 保存的是 Windows 绝对路径含 `\ / 空格`, 嵌进 URL 触发 http.client InvalidURL 或 Spring 400 | **V9 修复**: 6.5.1 改存 `name` (仅文件名), log-service 走 root+name 解析 |
-| 4.3 字段 data.records 存在 | order-service `/list` 返回 `List`, `data` 即数组 (无 records 包裹) | V9 修复: 新增 `t_assert_field('data', 'isArray')` 断言模式 |
-| 4.9 业务码 = 500 失败 | order-service `/list` 未做 userId-JWT 一致性校验, 跨用户返回 200 | V9 修复: 4.9 改预期 200 + data 是数组, 在 description 中标注安全弱点待后续 RBAC |
 
-**当前实测: 51 个请求, 146 个断言, 全部 PASS** (V9 修复后).
+如果跑出来还是有 fail, 打开 Postman 底部 **Console** 看 `[SAVE]` 日志,
+确认 `token` / `productId` 是不是真的被 set 进去。
 
 ## 目录结构
 
@@ -104,7 +98,7 @@ python postman\smoke_test_collection.py
   ├── 06.3 库存管理 (4)
   ├── 06.4 订单管理 (3)
   ├── 06.5 日志查看 (4)
-  │    └── 6.5.1 写 logFilePath
+  │    └── 6.5.1 写 logFileName
   └── 06.6 RabbitMQ 事件 (2)
 
 07-Sentinel 限流 (1)
@@ -129,7 +123,7 @@ python postman\smoke_test_collection.py
 | `{{newProductId}}` | 6.2.2 | admin 创建的临时商品 ID |
 | `{{orderId}}` / `{{paidOrderId}}` / `{{cancelOrderId}}` | 4.1 / 4.5 / 4.7 | 各阶段订单 ID |
 | `{{mqOrderId}}` / `{{mqCancelId}}` | 8.1 / 8.3 | MQ 测试专用订单 ID |
-| `{{logFileName}}` | 6.5.1 | 首个日志文件名 (V9 改: 仅文件名, 避免 Windows 绝对路径嵌入 URL) |
+| `{{logFilePath}}` | 6.5.1 | 首个日志文件路径 |
 
 ## 注意事项
 

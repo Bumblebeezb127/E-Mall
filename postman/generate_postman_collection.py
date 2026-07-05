@@ -753,7 +753,7 @@ collection = {
         {"key": "cancelOrderId", "value": "", "type": "string"},
         {"key": "mqOrderId", "value": "", "type": "string"},
         {"key": "mqCancelId", "value": "", "type": "string"},
-        {"key": "logFilePath", "value": "", "type": "string"},
+        {"key": "logFileName", "value": "", "type": "string"},
         {"key": "runTimestamp", "value": "", "type": "string"},
     ],
     "auth": {
@@ -800,7 +800,7 @@ environment = {
         {"key": "cancelOrderId", "value": "", "type": "default", "enabled": True},
         {"key": "mqOrderId", "value": "", "type": "default", "enabled": True},
         {"key": "mqCancelId", "value": "", "type": "default", "enabled": True},
-        {"key": "logFilePath", "value": "", "type": "default", "enabled": True},
+        {"key": "logFileName", "value": "", "type": "default", "enabled": True},
         {"key": "runTimestamp", "value": "", "type": "default", "enabled": True},
     ],
     "_postman_variable_scope": "environment",
@@ -911,7 +911,7 @@ python postman\\smoke_test_collection.py
   ├── 06.3 库存管理 (4)
   ├── 06.4 订单管理 (3)
   ├── 06.5 日志查看 (4)
-  │    └── 6.5.1 写 logFilePath
+  │    └── 6.5.1 写 logFileName
   └── 06.6 RabbitMQ 事件 (2)
 
 07-Sentinel 限流 (1)
