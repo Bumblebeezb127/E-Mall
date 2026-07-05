@@ -131,14 +131,15 @@ python postman\smoke_test_collection.py
    - 1.1 → 1.2 → 1.3 必须先跑 (否则后续无 token)
    - 1.4 跑过后才有 productId
    - 4.1 → 4.5 顺序执行才能正确写 paidOrderId
-2. **6.1 用户角色状态管理 (V10 修复)**: 
+2. **6.1 用户角色状态管理 (V10 修复)**:
    - 6.1.2 admin 改测试用户 → USER (前置保证干净)
    - 6.1.3 USER 访问 /admin/list → 期望 403
    - 6.1.4 admin 提权 ADMIN
    - **6.1.5 admin 降回 USER (关键清理步骤, 不要删!)** — 保证 6.2.5/6.3.4/6.4.3/6.5.4/6.6.2 这 5 个 USER 角色测试时用户角色干净.
    - 缺少 6.1.5 会导致 6.2-6.6 的 USER 越权测试拿到 200 而非 403, 全部失败报 `expected 200 to deeply equal 403`.
-3. **8.5 等待**: Runner 模式下无需额外等待, product-service listener 实时消费; 单步调试时手动等待 2-3s
-4. **限流测试 7.1**: 在 Runner 中配 Iterations=50 才有意义, 单步看不出限流
+3. **V11 collection 缓存陷阱**: 集合 ID 变更 (v3-full → v4-noauth) 必须**先彻底删除旧 collection** 再 Import, 否则 Postman 按 `_postman_id` 识别为同一集合不会更新. 同时**删除了 collection.auth 字段**避免 Runner 把 userToken 请求 fallback 注入 admin token.
+4. **8.5 等待**: Runner 模式下无需额外等待, product-service listener 实时消费; 单步调试时手动等待 2-3s
+5. **限流测试 7.1**: 在 Runner 中配 Iterations=50 才有意义, 单步看不出限流
 
 ## 测试断言说明
 

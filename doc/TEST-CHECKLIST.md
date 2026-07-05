@@ -97,42 +97,51 @@
 | 6.1.3 | PUT | `/api/user/admin/role/{uid}?roleValue=ADMIN` | 200 | 业务码 403 |
 | 6.1.4 | DELETE | `/api/user/admin/delete/{uid}` | 200 | 业务码 403 |
 
+> **V10 修复**: Postman Runner 自动化用例中 6.1 序列重构为
+> 6.1.1 列用户 → 6.1.2 admin 改 → USER → 6.1.3 USER 访问期望 403 →
+> 6.1.4 admin 提权 ADMIN → **6.1.5 admin 降回 USER (关键清理步骤, 不要删!)**.
+> 缺少 6.1.5 会导致 6.2.5/6.3.4/6.4.3/6.5.4/6.6.2 这 5 个 USER 越权测试拿到 200 而非 403.
+
 ### 6.2 商品管理
-| # | Method | Path | Body | 期望 (ADMIN) |
-|---|--------|------|------|------|
-| 6.2.1 | GET  | `/api/product/admin/list?page=1&size=20` | - | 200 |
-| 6.2.2 | POST | `/api/product/admin/create` | `{name, price, stock, description, imageUrl, category}` | 200, data.id |
-| 6.2.3 | PUT  | `/api/product/admin/update/{id}` | 同上 | 200 |
-| 6.2.4 | DELETE | `/api/product/admin/delete/{id}` | - | 200 |
+| # | Method | Path | Body | 期望 (ADMIN) | 期望 (USER) |
+|---|--------|------|------|------|------|
+| 6.2.1 | GET  | `/api/product/admin/list?page=1&size=20` | - | 200 | 业务码 403 |
+| 6.2.2 | POST | `/api/product/admin/create` | `{name, price, stock, description, imageUrl, category}` | 200, data.id | 业务码 403 |
+| 6.2.3 | PUT  | `/api/product/admin/update/{id}` | 同上 | 200 | 业务码 403 |
+| 6.2.4 | DELETE | `/api/product/admin/delete/{id}` | - | 200 | 业务码 403 |
+| 6.2.5 | POST | `/api/product/admin/create` (USER) | 同上 | 业务码 403 | - |
 
 ### 6.3 库存管理
-| # | Method | Path | 期望 (ADMIN) |
-|---|--------|------|------|
-| 6.3.1 | GET  | `/api/inventory/admin/list?page=1&size=20` | 200 |
-| 6.3.2 | POST | `/api/inventory/admin/init?productId={pid}&stock={n}` | 200 |
-| 6.3.3 | PUT  | `/api/inventory/admin/update?productId={pid}&stock={n}` | 200 |
+| # | Method | Path | 期望 (ADMIN) | 期望 (USER) |
+|---|--------|------|------|------|
+| 6.3.1 | GET  | `/api/inventory/admin/list?page=1&size=20` | 200 | 业务码 403 |
+| 6.3.2 | POST | `/api/inventory/admin/init?productId={pid}&stock={n}` | 200 | 业务码 403 |
+| 6.3.3 | PUT  | `/api/inventory/admin/update?productId={pid}&stock={n}` | 200 | 业务码 403 |
+| 6.3.4 | GET  | `/api/inventory/admin/list?page=1&size=20` (USER) | 业务码 403 | - |
 
 ### 6.4 订单管理
-| # | Method | Path | 期望 (ADMIN) |
-|---|--------|------|------|
-| 6.4.1 | GET  | `/api/order/admin/list?page=1&size=20` | 200 |
-| 6.4.2 | GET  | `/api/order/admin/stats` | 200, data.total / pending / paid / cancelled |
-| 6.4.3 | PUT  | `/api/order/admin/pay/{oid}` | 200 |
-| 6.4.4 | PUT  | `/api/order/admin/cancel/{oid}` | 200 |
-| 6.4.5 | DELETE | `/api/order/admin/delete/{oid}` | 200 |
+| # | Method | Path | 期望 (ADMIN) | 期望 (USER) |
+|---|--------|------|------|------|
+| 6.4.1 | GET  | `/api/order/admin/list?page=1&size=20` | 200 | 业务码 403 |
+| 6.4.2 | GET  | `/api/order/admin/stats` | 200, data.total / pending / paid / cancelled | 业务码 403 |
+| 6.4.3 | GET  | `/api/order/admin/list?page=1&size=20` (USER) | 业务码 403 | - |
 
 ### 6.5 日志查看
-| # | Method | Path | 期望 (ADMIN) |
-|---|--------|------|------|
-| 6.5.1 | GET  | `/api/log/files` | 200, data.files[] |
-| 6.5.2 | GET  | `/api/log/tail?file={path}&lines=50` | 200, data.content |
-| 6.5.3 | GET  | `/api/log/search?file={path}&keyword=ERROR&max=20` | 200, data.hits |
+| # | Method | Path | 期望 (ADMIN) | 期望 (USER) |
+|---|--------|------|------|------|
+| 6.5.1 | GET  | `/api/log/files` | 200, data.files[] | 业务码 403 |
+| 6.5.2 | GET  | `/api/log/tail?file={name}&lines=50` | 200, data.content | 业务码 403 |
+| 6.5.3 | GET  | `/api/log/search?file={name}&keyword=ERROR&max=20` | 200, data.hits | 业务码 403 |
+| 6.5.4 | GET  | `/api/log/files` (USER) | 业务码 403 | - |
+
+> **V9 修复**: 6.5.x 的 file 参数只存文件名 (`{{logFileName}}`), 不存绝对路径.
+> Windows 绝对路径含反斜杠/空格, 嵌进 URL 会触发 http.client InvalidURL 或 Spring @RequestParam 400.
 
 ### 6.6 RabbitMQ 事件查看
-| # | Method | Path | 期望 (ADMIN) |
-|---|--------|------|------|
-| 6.6.1 | GET  | `/api/product/admin/mq/events?limit=20` | 200, data.events[] (含 eventType/orderId/eventTime) |
-| 6.6.2 | GET  | `/api/product/admin/mq/events?limit=20` (USER) | 业务码 403 |
+| # | Method | Path | 期望 (ADMIN) | 期望 (USER) |
+|---|--------|------|------|------|
+| 6.6.1 | GET  | `/api/product/admin/mq/events?limit=20` | 200, data.events[] (含 eventType/orderId/eventTime) | 业务码 403 |
+| 6.6.2 | GET  | `/api/product/admin/mq/events?limit=20` (USER) | 业务码 403 | - |
 
 ---
 
@@ -181,6 +190,48 @@
 - [ ] §9 JMeter 5 个场景结果文件均产出
 - [ ] 异常路径 (§1.1 重名, §2.2 无 Token, §3.2 商品不存在, §4.3 库存不足, §6.x USER 越权) 全部返回预期错误码
 - [ ] 截图保存 Postman Runner / JMeter Summary Report / RabbitMQ Management → 提交给后端组归档
+- [ ] **Postman 集合必须用 V4 (`e-mall-api-v4-noauth`)**: 旧 V3 集合有 Runner auth fallback 陷阱
+  (V11 修复), 必须**先彻底删除** Postman 侧边栏旧集合再 Import 新 JSON, 否则 6 个 USER 越权
+  测试会拿到 200 而非 403
+
+---
+
+## 11. Postman 自动化测试
+
+> 详细报告见 `04-测试报告.docx 八点九、Postman 接口验证` 章节.
+> 简要说明:
+>
+> - **集合**: `postman/E-Mall-API-Collection.json` (52 个请求, 8 个文件夹, 148 条断言)
+> - **环境**: `postman/E-Mall-Local.postman_environment.json` (14 个变量)
+> - **生成器**: `postman/generate_postman_collection.py` (可重跑, 改完代码后 `python postman/generate_postman_collection.py` 重新生成)
+> - **新man 验证**: `newman run postman/E-Mall-API-Collection.json -e postman/E-Mall-Local.postman_environment.json --reporters cli` → **52 requests / 148 assertions / 0 failed**
+> - **Postman Runner 验证**: 142 / 6 失败 → V10 角色状态管理 + V11 集合缓存 + noauth 修复 → **148 / 0 失败**
+> - **Python 模拟**: `python postman/simulate_runner.py` 端到端模拟 1.1-6.6.2 完整 Runner 流程, 用于快速复现 RBAC 问题
+
+### 11.1 集合结构 (52 个请求)
+
+| 文件夹 | 数量 | 说明 |
+|--------|------|------|
+| 01-白名单接口 (无需 Token) | 7 | 注册 / 登录 / 商品分页 / 库存初始化 |
+| 02-用户模块 | 3 | 获取信息 / 错误密码 |
+| 03-商品模块 (需 Token) | 2 | 详情 / 不存在 |
+| 04-订单模块 (USER Token) | 9 | 创建 / 支付 / 取消 / 列表 / 详情 / 跨用户 |
+| 05-库存模块 | 2 | 查询 / 不存在 |
+| 06-Admin 后台 (RBAC) | 24 | 6 子模块 × admin 操作 + USER 越权 |
+| 07-Sentinel 限流 | 1 | 50 次密集请求 |
+| 08-RabbitMQ 事件流 (端到端) | 5 | 触发 3 类事件 + 查统计 |
+
+### 11.2 关键修复 (V5-V11)
+
+| 版本 | 修复 | 涉及用例 |
+|------|------|----------|
+| V5 | t_save_var 改 pm.test 包裹 + 1.1 接受 500 业务码 | 1.1-1.7 |
+| V6 | 双写 pm.environment.set + pm.collectionVariables.set | 1.7 / 2.1 |
+| V7 | H_USER/H_AUTH 模板剥除 + pre-request 注入 | 4.x / 5.x / 6.x / 8.x |
+| V8 | t_assert_body label 用方括号避免引号嵌套 | 3.2 |
+| V9 | request.auth = {"type": "noauth"} + logFileName 改存文件名 + isArray 断言 | 4.x/5.x/6.x/8.x (54 失败 → 全过) |
+| V10 | 6.1 角色状态管理 + 6.1.5 显式降权 | 6.1.2/6.2.5/6.3.4/6.4.3/6.5.4/6.6.2 |
+| V11 | 删除 collection.auth + 改 collection ID/name | 上述 6 个 RBAC 测试 |
 
 ---
 
@@ -189,3 +240,4 @@
 | 日期 | 修订人 | 修订内容 |
 |------|--------|----------|
 | 2026-07-05 | 后端组 | 初版 (覆盖 5 模块 + Admin + Sentinel + RabbitMQ + JMeter 建议) |
+| 2026-07-06 | 后端组 | V9-V11 修复: 同步 6.1.2/6.2.5/6.3.4/6.4.3/6.5.4/6.6.2 实际 403 行为, logFileName 字段名, 6.5.x/6.6.x 表格扩展 USER 越权列, 新增 §11 Postman 自动化测试章节 |

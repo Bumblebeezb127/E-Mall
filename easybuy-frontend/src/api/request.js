@@ -2,13 +2,8 @@ import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import router from '@/router'
 
-// baseURL 必须保持相对路径, 让 Vite dev server 的 proxy 生效:
-//   - dev:   /api/* -> http://localhost:9000 (vite.config.js proxy)
-//   - prod:  由部署方 (nginx / 反代) 转发到后端网关
-// 绝对 URL (如 'http://localhost:9000') 在多机部署时永远指不到网关, 会 403/404
-// 显式空字符串等价于"同源", 自动使用当前页面的 host
 const request = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '',
+  baseURL: 'http://localhost:9000',
   timeout: 10000
 })
 
