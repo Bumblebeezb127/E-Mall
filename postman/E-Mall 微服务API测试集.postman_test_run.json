@@ -1,0 +1,1251 @@
+{
+	"id": "2fe11c11-0bdf-4d74-97f5-a7ced539d8f0",
+	"name": "E-Mall 微服务API测试集",
+	"timestamp": "2026-07-05T03:45:33.369Z",
+	"collection_id": "56391162-9d3de543-25ae-43f4-a3f2-50c3859a509f",
+	"folder_id": 0,
+	"environment_id": "0",
+	"totalPass": 84,
+	"delay": 0,
+	"persist": true,
+	"status": "finished",
+	"startedAt": "2026-07-05T03:45:29.224Z",
+	"totalFail": 0,
+	"results": [
+		{
+			"id": "a047cfa0-b7ed-40f4-9e38-b999497ccb7a",
+			"name": "用户注册-用户A",
+			"url": "http://localhost:9000/api/user/register",
+			"time": 172,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"响应状态码为200": true,
+				"返回成功标志": true,
+				"返回包含message": true
+			},
+			"testPassFailCounts": {
+				"响应状态码为200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回成功标志": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回包含message": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				172
+			],
+			"allTests": [
+				{
+					"响应状态码为200": true,
+					"返回成功标志": true,
+					"返回包含message": true
+				}
+			]
+		},
+		{
+			"id": "bae35c3b-eff0-49ef-8758-8239fb3c2ab9",
+			"name": "用户注册-用户B",
+			"url": "http://localhost:9000/api/user/register",
+			"time": 160,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"响应状态码为200": true,
+				"返回成功标志": true
+			},
+			"testPassFailCounts": {
+				"响应状态码为200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回成功标志": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				160
+			],
+			"allTests": [
+				{
+					"响应状态码为200": true,
+					"返回成功标志": true
+				}
+			]
+		},
+		{
+			"id": "18c05c67-0646-453e-bd1a-e62c6fc5051d",
+			"name": "用户登录-获取Token",
+			"url": "http://localhost:9000/api/user/login",
+			"time": 130,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"响应状态码为200": true,
+				"返回成功标志code=200": true,
+				"返回包含JWT Token": true,
+				"返回包含userId": true
+			},
+			"testPassFailCounts": {
+				"响应状态码为200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回成功标志code=200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回包含JWT Token": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回包含userId": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				130
+			],
+			"allTests": [
+				{
+					"响应状态码为200": true,
+					"返回成功标志code=200": true,
+					"返回包含JWT Token": true,
+					"返回包含userId": true
+				}
+			]
+		},
+		{
+			"id": "cfd09127-6080-4c6b-80f7-7b88e6b6745e",
+			"name": "获取用户信息-需Token",
+			"url": "http://localhost:9000/api/user/info",
+			"time": 13,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"响应状态码为200": true,
+				"返回成功标志code=200": true,
+				"返回包含完整用户信息": true,
+				"返回的userId有效": true
+			},
+			"testPassFailCounts": {
+				"响应状态码为200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回成功标志code=200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回包含完整用户信息": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回的userId有效": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				13
+			],
+			"allTests": [
+				{
+					"响应状态码为200": true,
+					"返回成功标志code=200": true,
+					"返回包含完整用户信息": true,
+					"返回的userId有效": true
+				}
+			]
+		},
+		{
+			"id": "78553f0a-5c54-4995-864c-61c9884a93f4",
+			"name": "商品列表-第1页每页10条",
+			"url": "http://localhost:9000/api/product/list?page=1&size=10",
+			"time": 19,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"响应状态码为200": true,
+				"返回成功标志code=200": true,
+				"返回包含商品列表数组": true,
+				"返回包含完整分页信息": true
+			},
+			"testPassFailCounts": {
+				"响应状态码为200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回成功标志code=200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回包含商品列表数组": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回包含完整分页信息": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				19
+			],
+			"allTests": [
+				{
+					"响应状态码为200": true,
+					"返回成功标志code=200": true,
+					"返回包含商品列表数组": true,
+					"返回包含完整分页信息": true
+				}
+			]
+		},
+		{
+			"id": "99528433-b441-4426-bf6a-9d99902a7086",
+			"name": "商品列表-第2页每页10条",
+			"url": "http://localhost:9000/api/product/list?page=2&size=10",
+			"time": 14,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"响应状态码为200": true,
+				"返回成功标志code=200": true,
+				"当前页为第2页": true
+			},
+			"testPassFailCounts": {
+				"响应状态码为200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回成功标志code=200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"当前页为第2页": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				14
+			],
+			"allTests": [
+				{
+					"响应状态码为200": true,
+					"返回成功标志code=200": true,
+					"当前页为第2页": true
+				}
+			]
+		},
+		{
+			"id": "ee83a36a-2c87-48b1-b5a0-e67cfc2ca013",
+			"name": "商品列表-小页面每页5条",
+			"url": "http://localhost:9000/api/product/list?page=1&size=5",
+			"time": 13,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"响应状态码为200": true,
+				"返回成功标志code=200": true,
+				"分页数据有效": true
+			},
+			"testPassFailCounts": {
+				"响应状态码为200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回成功标志code=200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"分页数据有效": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				13
+			],
+			"allTests": [
+				{
+					"响应状态码为200": true,
+					"返回成功标志code=200": true,
+					"分页数据有效": true
+				}
+			]
+		},
+		{
+			"id": "7d0d86da-aac7-4b02-aa69-a9ff617bbb65",
+			"name": "商品列表-验证库存字段",
+			"url": "http://localhost:9000/api/product/list?page=1&size=10",
+			"time": 18,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"响应状态码为200": true,
+				"商品包含库存和价格字段": true
+			},
+			"testPassFailCounts": {
+				"响应状态码为200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"商品包含库存和价格字段": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				18
+			],
+			"allTests": [
+				{
+					"响应状态码为200": true,
+					"商品包含库存和价格字段": true
+				}
+			]
+		},
+		{
+			"id": "0a8f6f39-7a7e-41e5-a1be-84dfa704bc75",
+			"name": "商品列表-验证价格大于0",
+			"url": "http://localhost:9000/api/product/list?page=1&size=10",
+			"time": 14,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"响应状态码为200": true,
+				"所有商品价格均大于0": true
+			},
+			"testPassFailCounts": {
+				"响应状态码为200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"所有商品价格均大于0": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				14
+			],
+			"allTests": [
+				{
+					"响应状态码为200": true,
+					"所有商品价格均大于0": true
+				}
+			]
+		},
+		{
+			"id": "081517df-cf69-4c3c-b4b5-2286632fe1f6",
+			"name": "商品详情-ID1",
+			"url": "http://localhost:9000/api/product/detail/1",
+			"time": 11,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"响应状态码为200": true,
+				"返回成功标志code=200": true,
+				"返回完整商品详情": true,
+				"商品状态为上架(status=1)": true
+			},
+			"testPassFailCounts": {
+				"响应状态码为200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回成功标志code=200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回完整商品详情": {
+					"pass": 1,
+					"fail": 0
+				},
+				"商品状态为上架(status=1)": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				11
+			],
+			"allTests": [
+				{
+					"响应状态码为200": true,
+					"返回成功标志code=200": true,
+					"返回完整商品详情": true,
+					"商品状态为上架(status=1)": true
+				}
+			]
+		},
+		{
+			"id": "0e364379-bf3a-48bd-8739-44ad0c3f5d94",
+			"name": "商品详情-ID2",
+			"url": "http://localhost:9000/api/product/detail/2",
+			"time": 10,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"响应状态码为200": true,
+				"返回成功标志code=200": true,
+				"返回的商品ID与请求一致": true
+			},
+			"testPassFailCounts": {
+				"响应状态码为200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回成功标志code=200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回的商品ID与请求一致": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				10
+			],
+			"allTests": [
+				{
+					"响应状态码为200": true,
+					"返回成功标志code=200": true,
+					"返回的商品ID与请求一致": true
+				}
+			]
+		},
+		{
+			"id": "05daeab8-6018-49bb-9e49-4f3a12972d3c",
+			"name": "创建订单-订单1(商品1x2)",
+			"url": "http://localhost:9000/api/order/create",
+			"time": 68,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"响应状态码为200": true,
+				"返回成功标志code=200": true,
+				"返回包含订单信息(orderId/orderNo)": true,
+				"订单状态为待支付(0)": true,
+				"订单金额大于0 — Feign调用ProductService成功": true
+			},
+			"testPassFailCounts": {
+				"响应状态码为200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回成功标志code=200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回包含订单信息(orderId/orderNo)": {
+					"pass": 1,
+					"fail": 0
+				},
+				"订单状态为待支付(0)": {
+					"pass": 1,
+					"fail": 0
+				},
+				"订单金额大于0 — Feign调用ProductService成功": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				68
+			],
+			"allTests": [
+				{
+					"响应状态码为200": true,
+					"返回成功标志code=200": true,
+					"返回包含订单信息(orderId/orderNo)": true,
+					"订单状态为待支付(0)": true,
+					"订单金额大于0 — Feign调用ProductService成功": true
+				}
+			]
+		},
+		{
+			"id": "1e1938ec-83d4-4164-b676-48ad949c2d49",
+			"name": "取消订单-Feign库存回滚验证",
+			"url": "http://localhost:9000/api/order/cancel/37?userId=1",
+			"time": 59,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"响应状态码为200": true,
+				"返回成功标志code=200": true,
+				"订单状态变为已取消(status=4)": true,
+				"取消订单成功 —— Feign调用InventoryService回滚库存": true
+			},
+			"testPassFailCounts": {
+				"响应状态码为200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回成功标志code=200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"订单状态变为已取消(status=4)": {
+					"pass": 1,
+					"fail": 0
+				},
+				"取消订单成功 —— Feign调用InventoryService回滚库存": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				59
+			],
+			"allTests": [
+				{
+					"响应状态码为200": true,
+					"返回成功标志code=200": true,
+					"订单状态变为已取消(status=4)": true,
+					"取消订单成功 —— Feign调用InventoryService回滚库存": true
+				}
+			]
+		},
+		{
+			"id": "d4d469cc-236d-4dbb-980c-b4f4e43bf0ca",
+			"name": "创建订单-订单2(商品1x1)",
+			"url": "http://localhost:9000/api/order/create",
+			"time": 66,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"响应状态码为200": true,
+				"返回成功标志code=200": true,
+				"订单号格式正确(含ORD前缀)": true
+			},
+			"testPassFailCounts": {
+				"响应状态码为200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回成功标志code=200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"订单号格式正确(含ORD前缀)": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				66
+			],
+			"allTests": [
+				{
+					"响应状态码为200": true,
+					"返回成功标志code=200": true,
+					"订单号格式正确(含ORD前缀)": true
+				}
+			]
+		},
+		{
+			"id": "41fbea35-576e-49dd-b156-9a837ac031fd",
+			"name": "创建订单-订单3(商品2x3)",
+			"url": "http://localhost:9000/api/order/create",
+			"time": 59,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"响应状态码为200": true,
+				"返回成功标志code=200": true,
+				"订单金额计算正确(价格×数量)": true
+			},
+			"testPassFailCounts": {
+				"响应状态码为200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回成功标志code=200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"订单金额计算正确(价格×数量)": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				59
+			],
+			"allTests": [
+				{
+					"响应状态码为200": true,
+					"返回成功标志code=200": true,
+					"订单金额计算正确(价格×数量)": true
+				}
+			]
+		},
+		{
+			"id": "eaeec71a-939a-4d95-b6af-5562b2bf5c09",
+			"name": "查询订单列表-第1次",
+			"url": "http://localhost:9000/api/order/list?userId=1",
+			"time": 32,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"响应状态码为200": true,
+				"返回成功标志code=200": true,
+				"返回订单列表(数组)": true,
+				"订单包含订单项明细": true
+			},
+			"testPassFailCounts": {
+				"响应状态码为200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回成功标志code=200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回订单列表(数组)": {
+					"pass": 1,
+					"fail": 0
+				},
+				"订单包含订单项明细": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				32
+			],
+			"allTests": [
+				{
+					"响应状态码为200": true,
+					"返回成功标志code=200": true,
+					"返回订单列表(数组)": true,
+					"订单包含订单项明细": true
+				}
+			]
+		},
+		{
+			"id": "79acc3e0-aec1-48ad-878a-1cca7cffcb55",
+			"name": "查询订单列表-第2次",
+			"url": "http://localhost:9000/api/order/list?userId=1",
+			"time": 29,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"响应状态码为200": true,
+				"返回成功标志code=200": true,
+				"至少有3个订单": true
+			},
+			"testPassFailCounts": {
+				"响应状态码为200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回成功标志code=200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"至少有3个订单": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				29
+			],
+			"allTests": [
+				{
+					"响应状态码为200": true,
+					"返回成功标志code=200": true,
+					"至少有3个订单": true
+				}
+			]
+		},
+		{
+			"id": "83e2edc7-e314-4654-a304-365a89473519",
+			"name": "查询订单列表-第3次",
+			"url": "http://localhost:9000/api/order/list?userId=1",
+			"time": 26,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"响应状态码为200": true,
+				"返回成功标志code=200": true,
+				"订单包含orderNo/statusDesc/totalAmount字段": true
+			},
+			"testPassFailCounts": {
+				"响应状态码为200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回成功标志code=200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"订单包含orderNo/statusDesc/totalAmount字段": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				26
+			],
+			"allTests": [
+				{
+					"响应状态码为200": true,
+					"返回成功标志code=200": true,
+					"订单包含orderNo/statusDesc/totalAmount字段": true
+				}
+			]
+		},
+		{
+			"id": "1a864afb-d865-4264-b828-7d0290fd6c69",
+			"name": "查询订单详情",
+			"url": "http://localhost:9000/api/order/detail/39?userId=1",
+			"time": 18,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"响应状态码为200": true,
+				"返回成功标志code=200": true,
+				"返回完整订单详情": true
+			},
+			"testPassFailCounts": {
+				"响应状态码为200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回成功标志code=200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回完整订单详情": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				18
+			],
+			"allTests": [
+				{
+					"响应状态码为200": true,
+					"返回成功标志code=200": true,
+					"返回完整订单详情": true
+				}
+			]
+		},
+		{
+			"id": "f4f8093f-cb4b-483f-bed8-a00850d24686",
+			"name": "支付订单-Feign验证",
+			"url": "http://localhost:9000/api/order/pay/39?userId=1",
+			"time": 39,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"响应状态码为200": true,
+				"返回成功标志code=200": true,
+				"订单状态变为已支付(status=1)": true
+			},
+			"testPassFailCounts": {
+				"响应状态码为200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回成功标志code=200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"订单状态变为已支付(status=1)": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				39
+			],
+			"allTests": [
+				{
+					"响应状态码为200": true,
+					"返回成功标志code=200": true,
+					"订单状态变为已支付(status=1)": true
+				}
+			]
+		},
+		{
+			"id": "15a45219-ecbc-45dd-a9e0-b41db897a8ae",
+			"name": "查询库存-商品1",
+			"url": "http://localhost:9000/api/inventory/get/1",
+			"time": 24,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"响应状态码为200": true,
+				"返回成功标志code=200": true,
+				"返回包含库存信息(productId/stock/version)": true
+			},
+			"testPassFailCounts": {
+				"响应状态码为200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回成功标志code=200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回包含库存信息(productId/stock/version)": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				24
+			],
+			"allTests": [
+				{
+					"响应状态码为200": true,
+					"返回成功标志code=200": true,
+					"返回包含库存信息(productId/stock/version)": true
+				}
+			]
+		},
+		{
+			"id": "33906bbc-bf74-4870-b1aa-02399ade3f0c",
+			"name": "扣减库存-商品1",
+			"url": "http://localhost:9000/api/inventory/deduct",
+			"time": 22,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"响应状态码为200": true,
+				"返回成功标志code=200": true,
+				"扣减后库存正确减少": true
+			},
+			"testPassFailCounts": {
+				"响应状态码为200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回成功标志code=200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"扣减后库存正确减少": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				22
+			],
+			"allTests": [
+				{
+					"响应状态码为200": true,
+					"返回成功标志code=200": true,
+					"扣减后库存正确减少": true
+				}
+			]
+		},
+		{
+			"id": "b251c007-ac65-4afb-99d4-bcb58c56581f",
+			"name": "恢复库存-商品1",
+			"url": "http://localhost:9000/api/inventory/restore",
+			"time": 19,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"响应状态码为200": true,
+				"返回成功标志code=200": true,
+				"库存恢复成功": true
+			},
+			"testPassFailCounts": {
+				"响应状态码为200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回成功标志code=200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"库存恢复成功": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				19
+			],
+			"allTests": [
+				{
+					"响应状态码为200": true,
+					"返回成功标志code=200": true,
+					"库存恢复成功": true
+				}
+			]
+		},
+		{
+			"id": "5b539c2e-beeb-4a27-b9d9-4ed246033213",
+			"name": "白名单-商品列表(无Token应200)",
+			"url": "http://localhost:9000/api/product/list?page=1&size=5",
+			"time": 17,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"白名单接口——响应状态码为200": true,
+				"白名单接口——返回成功": true
+			},
+			"testPassFailCounts": {
+				"白名单接口——响应状态码为200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"白名单接口——返回成功": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				17
+			],
+			"allTests": [
+				{
+					"白名单接口——响应状态码为200": true,
+					"白名单接口——返回成功": true
+				}
+			]
+		},
+		{
+			"id": "9d785cde-4ac8-4c9d-9e8b-d6f2895e805c",
+			"name": "白名单-商品详情(无Token应200)",
+			"url": "http://localhost:9000/api/product/detail/1",
+			"time": 16,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"白名单接口——响应状态码为200": true,
+				"白名单接口——返回成功": true
+			},
+			"testPassFailCounts": {
+				"白名单接口——响应状态码为200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"白名单接口——返回成功": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				16
+			],
+			"allTests": [
+				{
+					"白名单接口——响应状态码为200": true,
+					"白名单接口——返回成功": true
+				}
+			]
+		},
+		{
+			"id": "63d817ce-5083-4834-a719-5942775901b9",
+			"name": "受保护资源-无Token(应401)",
+			"url": "http://localhost:9000/api/user/info",
+			"time": 3,
+			"responseCode": {
+				"code": 401,
+				"name": "Unauthorized"
+			},
+			"tests": {
+				"无Token访问受保护资源——应返回401": true
+			},
+			"testPassFailCounts": {
+				"无Token访问受保护资源——应返回401": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				3
+			],
+			"allTests": [
+				{
+					"无Token访问受保护资源——应返回401": true
+				}
+			]
+		},
+		{
+			"id": "80b0689a-34c1-4ca7-9734-d9f112d45370",
+			"name": "受保护资源-无效Token(应401)",
+			"url": "http://localhost:9000/api/user/info",
+			"time": 3,
+			"responseCode": {
+				"code": 401,
+				"name": "Unauthorized"
+			},
+			"tests": {
+				"无效Token访问受保护资源——应返回401": true
+			},
+			"testPassFailCounts": {
+				"无效Token访问受保护资源——应返回401": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				3
+			],
+			"allTests": [
+				{
+					"无效Token访问受保护资源——应返回401": true
+				}
+			]
+		},
+		{
+			"id": "7feebb75-fa5b-4cd0-a886-b852c10d85bf",
+			"name": "受保护资源-有效Token(应200)",
+			"url": "http://localhost:9000/api/order/list?userId=1",
+			"time": 22,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"有效Token访问受保护资源——应返回200": true,
+				"返回正确订单数据": true
+			},
+			"testPassFailCounts": {
+				"有效Token访问受保护资源——应返回200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"返回正确订单数据": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				22
+			],
+			"allTests": [
+				{
+					"有效Token访问受保护资源——应返回200": true,
+					"返回正确订单数据": true
+				}
+			]
+		},
+		{
+			"id": "581ceef9-682b-4d44-8553-844d7f4a9c45",
+			"name": "受保护资源-订单创建(需Token应200)",
+			"url": "http://localhost:9000/api/order/create",
+			"time": 65,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"有效Token创建订单——应返回200": true,
+				"订单创建成功(含Feign远程调用)": true
+			},
+			"testPassFailCounts": {
+				"有效Token创建订单——应返回200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"订单创建成功(含Feign远程调用)": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				65
+			],
+			"allTests": [
+				{
+					"有效Token创建订单——应返回200": true,
+					"订单创建成功(含Feign远程调用)": true
+				}
+			]
+		}
+	],
+	"count": 1,
+	"totalTime": 1161,
+	"collection": {
+		"requests": [
+			{
+				"id": "a047cfa0-b7ed-40f4-9e38-b999497ccb7a",
+				"method": "POST"
+			},
+			{
+				"id": "bae35c3b-eff0-49ef-8758-8239fb3c2ab9",
+				"method": "POST"
+			},
+			{
+				"id": "18c05c67-0646-453e-bd1a-e62c6fc5051d",
+				"method": "POST"
+			},
+			{
+				"id": "cfd09127-6080-4c6b-80f7-7b88e6b6745e",
+				"method": "GET"
+			},
+			{
+				"id": "78553f0a-5c54-4995-864c-61c9884a93f4",
+				"method": "GET"
+			},
+			{
+				"id": "99528433-b441-4426-bf6a-9d99902a7086",
+				"method": "GET"
+			},
+			{
+				"id": "ee83a36a-2c87-48b1-b5a0-e67cfc2ca013",
+				"method": "GET"
+			},
+			{
+				"id": "7d0d86da-aac7-4b02-aa69-a9ff617bbb65",
+				"method": "GET"
+			},
+			{
+				"id": "0a8f6f39-7a7e-41e5-a1be-84dfa704bc75",
+				"method": "GET"
+			},
+			{
+				"id": "081517df-cf69-4c3c-b4b5-2286632fe1f6",
+				"method": "GET"
+			},
+			{
+				"id": "0e364379-bf3a-48bd-8739-44ad0c3f5d94",
+				"method": "GET"
+			},
+			{
+				"id": "05daeab8-6018-49bb-9e49-4f3a12972d3c",
+				"method": "POST"
+			},
+			{
+				"id": "1e1938ec-83d4-4164-b676-48ad949c2d49",
+				"method": "PUT"
+			},
+			{
+				"id": "d4d469cc-236d-4dbb-980c-b4f4e43bf0ca",
+				"method": "POST"
+			},
+			{
+				"id": "41fbea35-576e-49dd-b156-9a837ac031fd",
+				"method": "POST"
+			},
+			{
+				"id": "eaeec71a-939a-4d95-b6af-5562b2bf5c09",
+				"method": "GET"
+			},
+			{
+				"id": "79acc3e0-aec1-48ad-878a-1cca7cffcb55",
+				"method": "GET"
+			},
+			{
+				"id": "83e2edc7-e314-4654-a304-365a89473519",
+				"method": "GET"
+			},
+			{
+				"id": "1a864afb-d865-4264-b828-7d0290fd6c69",
+				"method": "GET"
+			},
+			{
+				"id": "f4f8093f-cb4b-483f-bed8-a00850d24686",
+				"method": "PUT"
+			},
+			{
+				"id": "15a45219-ecbc-45dd-a9e0-b41db897a8ae",
+				"method": "GET"
+			},
+			{
+				"id": "33906bbc-bf74-4870-b1aa-02399ade3f0c",
+				"method": "POST"
+			},
+			{
+				"id": "b251c007-ac65-4afb-99d4-bcb58c56581f",
+				"method": "POST"
+			},
+			{
+				"id": "5b539c2e-beeb-4a27-b9d9-4ed246033213",
+				"method": "GET"
+			},
+			{
+				"id": "9d785cde-4ac8-4c9d-9e8b-d6f2895e805c",
+				"method": "GET"
+			},
+			{
+				"id": "63d817ce-5083-4834-a719-5942775901b9",
+				"method": "GET"
+			},
+			{
+				"id": "80b0689a-34c1-4ca7-9734-d9f112d45370",
+				"method": "GET"
+			},
+			{
+				"id": "7feebb75-fa5b-4cd0-a886-b852c10d85bf",
+				"method": "GET"
+			},
+			{
+				"id": "581ceef9-682b-4d44-8553-844d7f4a9c45",
+				"method": "POST"
+			}
+		]
+	}
+}
