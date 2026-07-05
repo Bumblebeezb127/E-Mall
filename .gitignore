@@ -114,3 +114,5 @@ jmeter/html/
 # (Collection Runner / CLI 跑完会输出 .postman_test_run.json, 是临时结果, 不入库)
 postman/*.postman_test_run.json
 postman/results/
+postman/.postman/
+postman/postman/
