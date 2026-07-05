@@ -74,7 +74,7 @@ public class LogController {
         }
         response.setContentType("text/plain; charset=UTF-8");
         response.setContentLengthLong(f.length());
-        String fileName = URLEncoder.encode(f.getName(), StandardCharsets.UTF_8).replace("+", "%20");
+        String fileName = URLEncoder.encode(f.getName(), StandardCharsets.UTF_8.name()).replace("+", "%20");
         response.setHeader(HttpHeaders.CONTENT_DISPOSITION,
                 "attachment; filename=\"" + fileName + "\"");
         try (OutputStream os = response.getOutputStream()) {

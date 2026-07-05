@@ -40,19 +40,19 @@ public class SentinelGatewayConfig {
         Set<GatewayFlowRule> rules = new HashSet<>();
 
         rules.add(new GatewayFlowRule("user-service")
-                .setCount(50)
+                .setCount(5000)
                 .setIntervalSec(1));
 
         rules.add(new GatewayFlowRule("product-service")
-                .setCount(100)
+                .setCount(5000)
                 .setIntervalSec(1));
 
         rules.add(new GatewayFlowRule("order-service")
-                .setCount(30)
+                .setCount(5000)
                 .setIntervalSec(1));
 
         rules.add(new GatewayFlowRule("inventory-service")
-                .setCount(50)
+                .setCount(5000)
                 .setIntervalSec(1));
 
         GatewayRuleManager.loadRules(rules);

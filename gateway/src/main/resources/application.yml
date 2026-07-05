@@ -21,6 +21,11 @@ spring:
         locator:
           enabled: true
           lower-case-service-id: true
+      httpclient:
+        pool:
+          type: fixed
+          max-connections: 500
+          acquire-timeout: 45000
       globalcors:
         cors-configurations:
           '[/**]':
