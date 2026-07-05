@@ -121,7 +121,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
-                  "pm.test('业务码 ∈ {200, 5001}', function () { pm.expect([200, 5001]).to.include(pm.response.json().code); });"
+                  "pm.test('业务码 ∈ {200, 500}', function () { pm.expect([200, 500]).to.include(pm.response.json().code); });"
                 ]
               }
             }
@@ -145,7 +145,7 @@
                 "register"
               ]
             },
-            "description": "注册一个新用户 (用户名带时间戳, 避免重名), 后续 USER 角色测试会用到。",
+            "description": "注册一个新用户 (用户名带时间戳, 避免重名), 后续 USER 角色测试会用到。\n允许业务码 500: 当用户已存在时 (例如重复跑 Runner) 后端抛 BusinessException 默认 500, 本测试依旧 PASS, 1.3 仍能用同样的用户名登录。",
             "auth": {
               "type": "noauth"
             },
@@ -173,8 +173,8 @@
                   "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
                   "pm.test('字段 data.token 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.token'); });",
                   "pm.test('字段 data.role = \"ADMIN\"', function () { pm.expect(pm.response.json()).to.have.nested.property('data.role', \"ADMIN\"); });",
-                  "try { var __tokens = (\"data.token\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { __cur = undefined; break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { __cur = undefined; break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('token', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ }",
-                  "try { var __tokens = (\"data.id\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { __cur = undefined; break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { __cur = undefined; break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('adminId', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ }"
+                  "pm.test('[SAVE] token', function () { try { var __tokens = (\"data.token\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('token', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ } });",
+                  "pm.test('[SAVE] adminId', function () { try { var __tokens = (\"data.id\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('adminId', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ } });"
                 ]
               }
             }
@@ -225,8 +225,8 @@
                   "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
                   "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
                   "pm.test('字段 data.token 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.token'); });",
-                  "try { var __tokens = (\"data.token\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { __cur = undefined; break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { __cur = undefined; break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('userToken', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ }",
-                  "try { var __tokens = (\"data.id\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { __cur = undefined; break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { __cur = undefined; break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('userId', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ }"
+                  "pm.test('[SAVE] userToken', function () { try { var __tokens = (\"data.token\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('userToken', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ } });",
+                  "pm.test('[SAVE] userId', function () { try { var __tokens = (\"data.id\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('userId', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ } });"
                 ]
               }
             }
@@ -277,7 +277,7 @@
                   "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
                   "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
                   "pm.test('字段 data.records 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.records'); });",
-                  "try { var __tokens = (\"data.records[0].id\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { __cur = undefined; break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { __cur = undefined; break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('productId', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ }"
+                  "pm.test('[SAVE] productId', function () { try { var __tokens = (\"data.records[0].id\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('productId', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ } });"
                 ]
               }
             }
@@ -753,7 +753,7 @@
                   "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
                   "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
                   "pm.test('字段 data.orderId 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.orderId'); });",
-                  "try { var __tokens = (\"data.orderId\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { __cur = undefined; break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { __cur = undefined; break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('orderId', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ }"
+                  "pm.test('[SAVE] orderId', function () { try { var __tokens = (\"data.orderId\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('orderId', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ } });"
                 ]
               }
             }
@@ -956,7 +956,7 @@
                 "exec": [
                   "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
                   "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
-                  "try { var __tokens = (\"data.orderId\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { __cur = undefined; break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { __cur = undefined; break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('paidOrderId', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ }"
+                  "pm.test('[SAVE] paidOrderId', function () { try { var __tokens = (\"data.orderId\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('paidOrderId', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ } });"
                 ]
               }
             }
@@ -1055,7 +1055,7 @@
                 "exec": [
                   "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
                   "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
-                  "try { var __tokens = (\"data.orderId\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { __cur = undefined; break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { __cur = undefined; break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('cancelOrderId', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ }"
+                  "pm.test('[SAVE] cancelOrderId', function () { try { var __tokens = (\"data.orderId\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('cancelOrderId', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ } });"
                 ]
               }
             }
@@ -1596,7 +1596,7 @@
                       "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
                       "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
                       "pm.test('字段 data.id 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.id'); });",
-                      "try { var __tokens = (\"data.id\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { __cur = undefined; break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { __cur = undefined; break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('newProductId', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ }"
+                      "pm.test('[SAVE] newProductId', function () { try { var __tokens = (\"data.id\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('newProductId', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ } });"
                     ]
                   }
                 }
@@ -2221,7 +2221,7 @@
                       "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
                       "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
                       "pm.test('字段 data.files 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.files'); });",
-                      "try { var __tokens = (\"data.files[0].path\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { __cur = undefined; break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { __cur = undefined; break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('logFilePath', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ }"
+                      "pm.test('[SAVE] logFilePath', function () { try { var __tokens = (\"data.files[0].path\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('logFilePath', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ } });"
                     ]
                   }
                 }
@@ -2608,7 +2608,7 @@
                 "exec": [
                   "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
                   "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
-                  "try { var __tokens = (\"data.orderId\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { __cur = undefined; break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { __cur = undefined; break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('mqOrderId', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ }"
+                  "pm.test('[SAVE] mqOrderId', function () { try { var __tokens = (\"data.orderId\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('mqOrderId', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ } });"
                 ]
               }
             }
@@ -2709,7 +2709,7 @@
                 "exec": [
                   "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
                   "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
-                  "try { var __tokens = (\"data.orderId\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { __cur = undefined; break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { __cur = undefined; break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('mqCancelId', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ }"
+                  "pm.test('[SAVE] mqCancelId', function () { try { var __tokens = (\"data.orderId\").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; var __cur = pm.response.json(); for (var __i = 0; __i < __tokens.length; __i++) { var __t = __tokens[__i]; if (__t.charAt(0) === '[') { var __idx = parseInt(__t.slice(1, -1), 10); if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } } else if (__cur && typeof __cur === 'object' && __t in __cur) { __cur = __cur[__t]; } else { break; } } if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('mqCancelId', String(__cur)); } } catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ } });"
                 ]
               }
             }

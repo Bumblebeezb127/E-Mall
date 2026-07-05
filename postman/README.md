@@ -17,7 +17,7 @@
 
 > **重要: 每次拉取新版代码后, 必须先删掉 Postman 里旧的同名 collection, 再重新 Import!**
 > Postman 会缓存已导入的 collection, 旧版会导致 `{{token}}` / `{{productId}}` 等变量传递失败,
-> 表现为 1.3/1.7/2.1/3.1 全部 401/404。
+> 表现为 1.1/1.7/2.1/3.1 全部 401/404。
 
 1. **删除旧 collection** (左侧 Collections → 找到 "E-Mall 微服务 API 测试集" → 右键 → Delete)
 2. 打开 Postman → **Import** → 拖入 `E-Mall-API-Collection.json` 和 `E-Mall-Local.postman_environment.json`
@@ -51,7 +51,7 @@ python postman\smoke_test_collection.py
 
 ## 故障排查 (重要!)
 
-如果 Runner 跑出来 1.3/1.7/2.1/3.1 全是 401/404, 说明 collection **变量没有传递**, 即:
+如果 Runner 跑出来 1.1/1.7/2.1/3.1 全是 401/404/500, 说明 collection **变量没有传递**, 即:
 - `{{token}}` 在 2.1 处为空 → 后端拒绝 → 401
 - `{{productId}}` 在 1.7 处为空 → URL `?productId=` → 404
 - `{{runTimestamp}}` 在 1.1/1.3 不一致 → 1.3 登录用户名对不上 1.1 注册的 → 500
@@ -62,9 +62,10 @@ python postman\smoke_test_collection.py
 |------|------|------|
 | Runner 跑的是旧代码 | Postman 缓存了旧 collection | **删除旧 collection 后重新 Import** |
 | `{{runTimestamp}}` 1.1/1.3 不一致 | collection-level pre-request 没生效 | 1.1 自身有 item-level 兜底 prerequest, 见 V3 设计 |
-| `save_var` 完全不生效 | exec 数组中多行 if 块被 Postman 拆分 | V3 已改为单行 `try { ... } catch` 写法 |
+| `save_var` 完全不生效 | exec 数组中多行 if 块被 Postman 拆分 | V4 已改为 `pm.test('SAVE x', function() { ... })` 函数表达式包裹 |
+| 1.1 业务码 500 | 用户名重名 (数据库已有 `pmuser_<runTimestamp>` 用户) | V4 1.1 已允许 500 (重名), 1.3 用同样用户名仍可登录 |
 
-如果跑出来还是有 fail, 打开 Postman 底部 **Console** 看 `[SAVE]` / `[WARN]` 日志,
+如果跑出来还是有 fail, 打开 Postman 底部 **Console** 看 `[SAVE]` 日志,
 确认 `token` / `productId` 是不是真的被 set 进去。
 
 ## 目录结构

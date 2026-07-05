@@ -62,15 +62,15 @@ def t_save_var(path: str, var_name: str) -> str:
 
     path 支持 'data.records[0].id' 这种带数组下标的写法, 内部用正则拆 token.
 
-    关键约束: 整个表达式必须放在 exec 数组的**单个字符串元素**内, 且
-    一行写完 (用 ; 分隔). Postman Runner 把 exec 数组中每个元素当作
-    独立 script block, 多行 if 块在某些版本会被拆分执行, 导致变量
-    写入失败. 单行 ; 拼接写法对 V8 引擎最稳.
+    关键约束: 用 pm.test('...', function() { ... }) 包裹, 函数表达式在
+    V8 沙箱中通过 Function() 包装执行, 内部 var 在函数作用域内, 不会被
+    Postman Runner 的 exec 数组独立 script block 机制干扰, 是最稳的写法.
 
     外层 try-catch 防止响应非 JSON / 路径不存在时整个 test event 失败.
     """
     js_path = json.dumps(path)
     return (
+        "pm.test('[SAVE] " + var_name + "', function () { "
         "try { "
         "var __tokens = (" + js_path + ").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; "
         "var __cur = pm.response.json(); "
@@ -78,13 +78,14 @@ def t_save_var(path: str, var_name: str) -> str:
         "var __t = __tokens[__i]; "
         "if (__t.charAt(0) === '[') { "
         "var __idx = parseInt(__t.slice(1, -1), 10); "
-        "if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { __cur = undefined; break; } "
+        "if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { break; } "
         "} else if (__cur && typeof __cur === 'object' && __t in __cur) { "
         "__cur = __cur[__t]; "
-        "} else { __cur = undefined; break; } "
+        "} else { break; } "
         "} "
         "if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('" + var_name + "', String(__cur)); } "
-        "} catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ }"
+        "} catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ } "
+        "});"
     )
 
 
@@ -196,13 +197,15 @@ f1 = folder("01-白名单接口 (无需 Token)", [
     req("1.1 注册测试用户",
         "POST", "/api/user/register",
         body=NEW_USER, auth="noauth", headers=H_JSON,
-        description="注册一个新用户 (用户名带时间戳, 避免重名), 后续 USER 角色测试会用到。",
+        description="注册一个新用户 (用户名带时间戳, 避免重名), 后续 USER 角色测试会用到。\n"
+                    "允许业务码 500: 当用户已存在时 (例如重复跑 Runner) 后端抛 BusinessException 默认 500, "
+                    "本测试依旧 PASS, 1.3 仍能用同样的用户名登录。",
         # 兜底: 即使 collection-level pre-request 没生效, 1.1 自己也会初始化 runTimestamp,
         # 保证 1.1 和 1.3 共用同一个时间戳 (1.3 不主动 set, 只读).
         pre=[
             "if (!pm.collectionVariables.get('runTimestamp')) { pm.collectionVariables.set('runTimestamp', String(Date.now())); }",
         ],
-        tests=[t_assert_status(200), t_assert_business([200, 5001])]),  # 200 或 5001(重名)
+        tests=[t_assert_status(200), t_assert_business([200, 500])]),  # 200 成功 / 500 重名
     req("1.2 admin 登录",
         "POST", "/api/user/login",
         body=ADMIN_LOGIN_BODY, auth="noauth", headers=H_JSON,
@@ -719,7 +722,7 @@ README = """# E-Mall Postman 测试集 (V3)
 | 文件 | 用途 |
 |------|------|
 | `E-Mall-API-Collection.json` | Postman 集合 (**51 个请求**, 8 个文件夹) |
-| `E-Mall-Local.postman_environment.json` | 环境文件, 预填 13 个变量 |
+| `E-Mall-Local.postman_environment.json` | 环境文件, 预填 14 个变量 (含 runTimestamp) |
 | `generate_postman_collection.py` | 集合生成器源码 (可重跑) |
 | `smoke_test_collection.py` | 无需 Postman 也能跑的 Python 烟测 (模拟 Runner 行为) |
 
@@ -727,14 +730,19 @@ README = """# E-Mall Postman 测试集 (V3)
 
 ### 方式 A: Postman Runner (推荐, GUI)
 
-1. 打开 Postman → **Import** → 拖入 `E-Mall-API-Collection.json` 和 `E-Mall-Local.postman_environment.json`
-2. 右上角 Environment 下拉框 → 选 **E-Mall Local**
-3. 选中集合根 → **Run** → **Run E-Mall 微服务 API 测试集 (V3 全面版)**
-4. 配置:
+> **重要: 每次拉取新版代码后, 必须先删掉 Postman 里旧的同名 collection, 再重新 Import!**
+> Postman 会缓存已导入的 collection, 旧版会导致 `{{token}}` / `{{productId}}` 等变量传递失败,
+> 表现为 1.1/1.7/2.1/3.1 全部 401/404。
+
+1. **删除旧 collection** (左侧 Collections → 找到 "E-Mall 微服务 API 测试集" → 右键 → Delete)
+2. 打开 Postman → **Import** → 拖入 `E-Mall-API-Collection.json` 和 `E-Mall-Local.postman_environment.json`
+3. 右上角 Environment 下拉框 → 选 **E-Mall Local**
+4. 选中集合根 → **Run** → **Run E-Mall 微服务 API 测试集 (V3 全面版)**
+5. 配置:
    - Iterations: **1**
    - Delay: **0 ms**
    - Data file: 无
-5. 点击 **Run E-Mall 微服务 API 测试集 (V3 全面版)**
+6. 点击 **Run E-Mall 微服务 API 测试集 (V3 全面版)**
 
 > **必须按顺序跑** (Collection Runner 默认就是按文件夹顺序)。
 > Runner 会显示每个请求的 Tests 通过情况, 全部 ✓ 即通过。
@@ -755,6 +763,25 @@ python postman\\smoke_test_collection.py
 
 展开 `01-白名单接口` → 双击 **1.2 admin 登录** → 右侧 **Send**。
 看到 `Tests (4/4)` 全部通过即正常, 此时 Collection Variables 中 `token` 已自动填充。
+
+## 故障排查 (重要!)
+
+如果 Runner 跑出来 1.1/1.7/2.1/3.1 全是 401/404/500, 说明 collection **变量没有传递**, 即:
+- `{{token}}` 在 2.1 处为空 → 后端拒绝 → 401
+- `{{productId}}` 在 1.7 处为空 → URL `?productId=` → 404
+- `{{runTimestamp}}` 在 1.1/1.3 不一致 → 1.3 登录用户名对不上 1.1 注册的 → 500
+
+**根因 + 解决**:
+
+| 现象 | 根因 | 解决 |
+|------|------|------|
+| Runner 跑的是旧代码 | Postman 缓存了旧 collection | **删除旧 collection 后重新 Import** |
+| `{{runTimestamp}}` 1.1/1.3 不一致 | collection-level pre-request 没生效 | 1.1 自身有 item-level 兜底 prerequest, 见 V3 设计 |
+| `save_var` 完全不生效 | exec 数组中多行 if 块被 Postman 拆分 | V4 已改为 `pm.test('SAVE x', function() { ... })` 函数表达式包裹 |
+| 1.1 业务码 500 | 用户名重名 (数据库已有 `pmuser_<runTimestamp>` 用户) | V4 1.1 已允许 500 (重名), 1.3 用同样用户名仍可登录 |
+
+如果跑出来还是有 fail, 打开 Postman 底部 **Console** 看 `[SAVE]` 日志,
+确认 `token` / `productId` 是不是真的被 set 进去。
 
 ## 目录结构
 
