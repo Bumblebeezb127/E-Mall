@@ -27,19 +27,6 @@ def load_env():
     return {v["key"]: v["value"] for v in json.loads(ENV_PATH.read_text(encoding="utf-8"))["values"]}
 
 
-def substitute(s, vars_):
-    if not isinstance(s, str):
-        return s
-    def repl(m):
-        key = m.group(1)
-        if key == "$timestamp":
-            return str(int(time.time() * 1000))
-        if key in vars_:
-            return vars_[key]
-        return m.group(0)
-    return re.sub(r"\{\{([^}]+)\}\}", repl, s)
-
-
 def build_url(request):
     url = request.get("url", {})
     raw = url.get("raw", "")
@@ -159,7 +146,7 @@ def run_test_script(item, code, text, vars_):
 def main():
     col = load_collection()
     vars_ = load_env()
-    # Postman's {{$timestamp}} is a single value per collection run
+    # 模拟 Postman collection 级 prerequest script: 整个 Runner 期间只生成一次
     RUN_TIMESTAMP = str(int(time.time() * 1000))
     print(f"[INFO] Loaded {len(vars_)} environment variables")
     print(f"[INFO] Run timestamp: {RUN_TIMESTAMP}")
@@ -180,6 +167,8 @@ def main():
         def repl(m):
             key = m.group(1)
             if key == "$timestamp":
+                return RUN_TIMESTAMP
+            if key == "runTimestamp":
                 return RUN_TIMESTAMP
             if key in vars_:
                 return vars_[key]
@@ -213,10 +202,13 @@ def main():
                                         "newProductId", "orderId", "paidOrderId",
                                         "cancelOrderId", "mqOrderId", "mqCancelId", "logFilePath"):
                     var_name = m.group(1)
-                    # The path is in the same line (multi-line string)
-                    path_m = re.search(r"__p = '([^']+)'", line)
+                    # The path is in the same line (multi-line string with embedded \n).
+                    # save_var uses __tokens = ("data.token").match(...), so the path is
+                    # the first thing inside the parens of __tokens = (...).
+                    path_m = re.search(r"__tokens = \(([^)]+)\)", line)
                     if path_m:
-                        v = extract_var_from_response(text, path_m.group(1), vars_)
+                        path = path_m.group(1).strip().strip('"').strip("'")
+                        v = extract_var_from_response(text, path, vars_)
                         if v is not None:
                             vars_[var_name] = str(v)
 

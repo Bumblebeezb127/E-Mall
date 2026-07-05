@@ -7,7 +7,7 @@
 | 文件 | 用途 |
 |------|------|
 | `E-Mall-API-Collection.json` | Postman 集合 (**51 个请求**, 8 个文件夹) |
-| `E-Mall-Local.postman_environment.json` | 环境文件, 预填 13 个变量 |
+| `E-Mall-Local.postman_environment.json` | 环境文件, 预填 14 个变量 (含 runTimestamp) |
 | `generate_postman_collection.py` | 集合生成器源码 (可重跑) |
 | `smoke_test_collection.py` | 无需 Postman 也能跑的 Python 烟测 (模拟 Runner 行为) |
 
@@ -15,14 +15,19 @@
 
 ### 方式 A: Postman Runner (推荐, GUI)
 
-1. 打开 Postman → **Import** → 拖入 `E-Mall-API-Collection.json` 和 `E-Mall-Local.postman_environment.json`
-2. 右上角 Environment 下拉框 → 选 **E-Mall Local**
-3. 选中集合根 → **Run** → **Run E-Mall 微服务 API 测试集 (V3 全面版)**
-4. 配置:
+> **重要: 每次拉取新版代码后, 必须先删掉 Postman 里旧的同名 collection, 再重新 Import!**
+> Postman 会缓存已导入的 collection, 旧版会导致 `{{token}}` / `{{productId}}` 等变量传递失败,
+> 表现为 1.3/1.7/2.1/3.1 全部 401/404。
+
+1. **删除旧 collection** (左侧 Collections → 找到 "E-Mall 微服务 API 测试集" → 右键 → Delete)
+2. 打开 Postman → **Import** → 拖入 `E-Mall-API-Collection.json` 和 `E-Mall-Local.postman_environment.json`
+3. 右上角 Environment 下拉框 → 选 **E-Mall Local**
+4. 选中集合根 → **Run** → **Run E-Mall 微服务 API 测试集 (V3 全面版)**
+5. 配置:
    - Iterations: **1**
    - Delay: **0 ms**
    - Data file: 无
-5. 点击 **Run E-Mall 微服务 API 测试集 (V3 全面版)**
+6. 点击 **Run E-Mall 微服务 API 测试集 (V3 全面版)**
 
 > **必须按顺序跑** (Collection Runner 默认就是按文件夹顺序)。
 > Runner 会显示每个请求的 Tests 通过情况, 全部 ✓ 即通过。
@@ -43,6 +48,24 @@ python postman\smoke_test_collection.py
 
 展开 `01-白名单接口` → 双击 **1.2 admin 登录** → 右侧 **Send**。
 看到 `Tests (4/4)` 全部通过即正常, 此时 Collection Variables 中 `token` 已自动填充。
+
+## 故障排查 (重要!)
+
+如果 Runner 跑出来 1.3/1.7/2.1/3.1 全是 401/404, 说明 collection **变量没有传递**, 即:
+- `{{token}}` 在 2.1 处为空 → 后端拒绝 → 401
+- `{{productId}}` 在 1.7 处为空 → URL `?productId=` → 404
+- `{{runTimestamp}}` 在 1.1/1.3 不一致 → 1.3 登录用户名对不上 1.1 注册的 → 500
+
+**根因 + 解决**:
+
+| 现象 | 根因 | 解决 |
+|------|------|------|
+| Runner 跑的是旧代码 | Postman 缓存了旧 collection | **删除旧 collection 后重新 Import** |
+| `{{runTimestamp}}` 1.1/1.3 不一致 | collection-level pre-request 没生效 | 1.1 自身有 item-level 兜底 prerequest, 见 V3 设计 |
+| `save_var` 完全不生效 | exec 数组中多行 if 块被 Postman 拆分 | V3 已改为单行 `try { ... } catch` 写法 |
+
+如果跑出来还是有 fail, 打开 Postman 底部 **Console** 看 `[SAVE]` / `[WARN]` 日志,
+确认 `token` / `productId` 是不是真的被 set 进去。
 
 ## 目录结构
 

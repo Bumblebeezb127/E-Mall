@@ -58,18 +58,33 @@ def t_assert_field(path: str, kind: str = "exist", value: Any = None) -> str:
 
 
 def t_save_var(path: str, var_name: str) -> str:
-    """把响应 JSON 某字段保存到 Collection Variable"""
+    """把响应 JSON 某字段保存到 Collection Variable
+
+    path 支持 'data.records[0].id' 这种带数组下标的写法, 内部用正则拆 token.
+
+    关键约束: 整个表达式必须放在 exec 数组的**单个字符串元素**内, 且
+    一行写完 (用 ; 分隔). Postman Runner 把 exec 数组中每个元素当作
+    独立 script block, 多行 if 块在某些版本会被拆分执行, 导致变量
+    写入失败. 单行 ; 拼接写法对 V8 引擎最稳.
+
+    外层 try-catch 防止响应非 JSON / 路径不存在时整个 test event 失败.
+    """
+    js_path = json.dumps(path)
     return (
-        f"if (pm.response.code === 200) {{\n"
-        f"    var __v = pm.response.json();\n"
-        f"    var __p = '{path}'.split('.');\n"
-        f"    var __cur = __v;\n"
-        f"    for (var __i = 0; __i < __p.length; __i++) {{ __cur = __cur ? __cur[__p[__i]] : undefined; }}\n"
-        f"    if (__cur !== undefined && __cur !== null) {{\n"
-        f"        pm.collectionVariables.set('{var_name}', String(__cur));\n"
-        f"        console.log('[SAVE] {var_name} = ' + __cur);\n"
-        f"    }}\n"
-        f"}}"
+        "try { "
+        "var __tokens = (" + js_path + ").match(/[^.\\[\\]]+|\\[\\d+\\]/g) || []; "
+        "var __cur = pm.response.json(); "
+        "for (var __i = 0; __i < __tokens.length; __i++) { "
+        "var __t = __tokens[__i]; "
+        "if (__t.charAt(0) === '[') { "
+        "var __idx = parseInt(__t.slice(1, -1), 10); "
+        "if (Array.isArray(__cur) && __idx < __cur.length) { __cur = __cur[__idx]; } else { __cur = undefined; break; } "
+        "} else if (__cur && typeof __cur === 'object' && __t in __cur) { "
+        "__cur = __cur[__t]; "
+        "} else { __cur = undefined; break; } "
+        "} "
+        "if (__cur !== undefined && __cur !== null) { pm.collectionVariables.set('" + var_name + "', String(__cur)); } "
+        "} catch (__e) { /* 静默: 路径不存在不阻断后续断言 */ }"
     )
 
 
@@ -168,7 +183,11 @@ H_USER = [
 # ---------------------------------------------------------------------------
 # 1. 白名单
 # ---------------------------------------------------------------------------
-TS = "{{$timestamp}}"
+# {{$timestamp}} 在 Postman 中每个请求都重新求值, Runner 跑 1.1/1.3 时
+# 会得到两个不同的 timestamp, 导致 1.3 登录时用户名对不上。
+# 解法: 改用 {{runTimestamp}} 变量, 由 collection 级 prerequest script
+# 在整个 Runner 期间只生成一次。
+TS = "{{runTimestamp}}"
 ADMIN_LOGIN_BODY = {"username": "admin", "password": "admin123"}
 NEW_USER = {"username": "pmuser_" + TS, "password": "pass1234"}
 NEW_USER_LOGIN = {"username": NEW_USER["username"], "password": NEW_USER["password"]}
@@ -178,6 +197,11 @@ f1 = folder("01-白名单接口 (无需 Token)", [
         "POST", "/api/user/register",
         body=NEW_USER, auth="noauth", headers=H_JSON,
         description="注册一个新用户 (用户名带时间戳, 避免重名), 后续 USER 角色测试会用到。",
+        # 兜底: 即使 collection-level pre-request 没生效, 1.1 自己也会初始化 runTimestamp,
+        # 保证 1.1 和 1.3 共用同一个时间戳 (1.3 不主动 set, 只读).
+        pre=[
+            "if (!pm.collectionVariables.get('runTimestamp')) { pm.collectionVariables.set('runTimestamp', String(Date.now())); }",
+        ],
         tests=[t_assert_status(200), t_assert_business([200, 5001])]),  # 200 或 5001(重名)
     req("1.2 admin 登录",
         "POST", "/api/user/login",
@@ -615,6 +639,7 @@ collection = {
             - productId / newProductId: 商品 ID
             - orderId / paidOrderId / cancelOrderId / mqOrderId / mqCancelId: 订单 ID
             - logFilePath: 日志文件路径 (6.5.1 自动填充)
+            - runTimestamp: 当前 Runner 启动时间戳, 1.1/1.3 共用 (避免重名)
         """).strip(),
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     },
@@ -632,6 +657,7 @@ collection = {
         {"key": "mqOrderId", "value": "", "type": "string"},
         {"key": "mqCancelId", "value": "", "type": "string"},
         {"key": "logFilePath", "value": "", "type": "string"},
+        {"key": "runTimestamp", "value": "", "type": "string"},
     ],
     "auth": {
         "type": "bearer",
@@ -639,6 +665,17 @@ collection = {
             {"key": "token", "value": "Bearer {{token}}", "type": "string"}
         ],
     },
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    "if (!pm.collectionVariables.get('runTimestamp')) { pm.collectionVariables.set('runTimestamp', String(Date.now())); }",
+                ],
+            },
+        },
+    ],
     "item": [f1, f2, f3, f4, f5, f6, f7, f8],
 }
 
@@ -663,6 +700,7 @@ environment = {
         {"key": "mqOrderId", "value": "", "type": "default", "enabled": True},
         {"key": "mqCancelId", "value": "", "type": "default", "enabled": True},
         {"key": "logFilePath", "value": "", "type": "default", "enabled": True},
+        {"key": "runTimestamp", "value": "", "type": "default", "enabled": True},
     ],
     "_postman_variable_scope": "environment",
     "schema": "https://schema.getpostman.com/json/environment/v2.1.0/environment.json",
