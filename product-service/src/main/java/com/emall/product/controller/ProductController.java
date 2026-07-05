@@ -78,12 +78,12 @@ public class ProductController {
     // ============== Admin 端点 ==============
 
     @PostMapping("/admin/create")
-    public ResponseResult<Void> adminCreate(
+    public ResponseResult<Product> adminCreate(
             @RequestHeader(value = "X-User-Role", required = false) String role,
             @Valid @RequestBody AddProductRequest request) {
         requireAdmin(role);
-        productService.addProduct(request);
-        return ResponseResult.success("Product created", null);
+        Product created = productService.addProductAndReturn(request);
+        return ResponseResult.success("Product created", created);
     }
 
     @PutMapping("/admin/update/{id}")

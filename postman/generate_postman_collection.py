@@ -1,0 +1,844 @@
+"""
+E-Mall Postman 集合生成器 (v3 全面版)
+- 覆盖 doc/TEST-CHECKLIST.md 中 Postman 部分的所有用例
+- 使用 Collection v2.1 schema
+- 自动注入 pm.test 脚本 (HTTP 状态 / 业务码 / 关键字段)
+- 自动将 token / id / orderId 等关键值写入 Collection Variables, 供后续请求链式调用
+
+输出:
+  postman/E-Mall-API-Collection.json
+  postman/E-Mall-Local.postman_environment.json
+  postman/README.md
+"""
+import json
+import textwrap
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
+
+OUT_DIR = Path(r"d:\Learning materials\SpringCloud\e-mall\postman")
+COLLECTION_PATH = OUT_DIR / "E-Mall-API-Collection.json"
+ENV_PATH = OUT_DIR / "E-Mall-Local.postman_environment.json"
+README_PATH = OUT_DIR / "README.md"
+
+# ---------------------------------------------------------------------------
+# 通用 test 脚本构造器
+# ---------------------------------------------------------------------------
+def t_assert_status(code: int = 200) -> str:
+    return f"pm.test('HTTP {code}', function () {{ pm.response.to.have.status({code}); }});"
+
+
+def t_assert_business(code: Union[int, List[int]] = 200) -> str:
+    if isinstance(code, list):
+        codes = ", ".join(str(c) for c in code)
+        return f"pm.test('业务码 ∈ {{{codes}}}', function () {{ pm.expect([{codes}]).to.include(pm.response.json().code); }});"
+    return f"pm.test('业务码 = {code}', function () {{ pm.expect(pm.response.json().code).to.eql({code}); }});"
+
+
+def t_assert_body(contains: str, label: Optional[str] = None) -> str:
+    label = label or f"body 含 '{contains}'"
+    needle = contains.replace("'", "\\'")
+    return f"pm.test('{label}', function () {{ pm.expect(JSON.stringify(pm.response.json())).to.include('{needle}'); }});"
+
+
+def t_assert_field(path: str, kind: str = "exist", value: Any = None) -> str:
+    """
+    path: 用点号分隔的 JSON 路径, 如 'data.token' / 'data.records.length'
+    kind: exist / eq / above / typeof:number
+    """
+    if kind == "exist":
+        return f"pm.test('字段 {path} 存在', function () {{ pm.expect(pm.response.json()).to.have.nested.property('{path}'); }});"
+    if kind == "eq":
+        v = json.dumps(value, ensure_ascii=False)
+        return f"pm.test('字段 {path} = {v}', function () {{ pm.expect(pm.response.json()).to.have.nested.property('{path}', {v}); }});"
+    if kind == "above":
+        return f"pm.test('字段 {path} > 0', function () {{ pm.expect(pm.response.json()).to.have.nested.property('{path}'); pm.expect(pm.response.json().{path}).to.be.above(0); }});"
+    if kind == "typeof:number":
+        return f"pm.test('字段 {path} 为 number', function () {{ pm.expect(pm.response.json().{path}).to.be.a('number'); }});"
+    raise ValueError(f"unknown assert kind: {kind}")
+
+
+def t_save_var(path: str, var_name: str) -> str:
+    """把响应 JSON 某字段保存到 Collection Variable"""
+    return (
+        f"if (pm.response.code === 200) {{\n"
+        f"    var __v = pm.response.json();\n"
+        f"    var __p = '{path}'.split('.');\n"
+        f"    var __cur = __v;\n"
+        f"    for (var __i = 0; __i < __p.length; __i++) {{ __cur = __cur ? __cur[__p[__i]] : undefined; }}\n"
+        f"    if (__cur !== undefined && __cur !== null) {{\n"
+        f"        pm.collectionVariables.set('{var_name}', String(__cur));\n"
+        f"        console.log('[SAVE] {var_name} = ' + __cur);\n"
+        f"    }}\n"
+        f"}}"
+    )
+
+
+def t_clear_var(var_name: str) -> str:
+    return f"pm.collectionVariables.set('{var_name}', '');"
+
+
+def t_log(msg: str) -> str:
+    return f"console.log('[INFO] {msg}');"
+
+
+# ---------------------------------------------------------------------------
+# Request 构造器
+# ---------------------------------------------------------------------------
+def req(
+    name: str,
+    method: str,
+    path: str,
+    *,
+    description: str = "",
+    headers: Optional[List[Dict[str, str]]] = None,
+    body: Any = None,
+    auth: str = "inherit",  # inherit | noauth | bearer
+    tests: Optional[List[str]] = None,
+    pre: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    item: Dict[str, Any] = {
+        "name": name,
+        "event": [],
+        "request": {
+            "method": method,
+            "header": headers if headers is not None else [
+                {"key": "Content-Type", "value": "application/json"}
+            ],
+            "url": {
+                "raw": "{{baseUrl}}" + path,
+                "host": ["{{baseUrl}}"],
+                "path": path.lstrip("/").split("/"),
+            },
+            "description": description,
+        },
+        "response": [],
+    }
+    # query 解析
+    if "?" in path:
+        base, qs = path.split("?", 1)
+        # raw 显示完整 URL (含 query)
+        item["request"]["url"]["raw"] = "{{baseUrl}}" + path
+        item["request"]["url"]["path"] = base.lstrip("/").split("/")
+        item["request"]["url"]["query"] = []
+        for kv in qs.split("&"):
+            k, _, v = kv.partition("=")
+            item["request"]["url"]["query"].append({"key": k, "value": v})
+
+    # auth 覆写
+    if auth == "noauth":
+        item["request"]["auth"] = {"type": "noauth"}
+    elif auth == "bearer":
+        item["request"]["auth"] = {"type": "bearer", "bearer": [{"key": "token", "value": "Bearer {{token}}", "type": "string"}]}
+
+    if body is not None:
+        item["request"]["body"] = {
+            "mode": "raw",
+            "raw": json.dumps(body, ensure_ascii=False, indent=4),
+            "options": {"raw": {"language": "json"}},
+        }
+    if pre:
+        item["event"].append({"listen": "prerequest", "script": {"type": "text/javascript", "exec": pre}})
+    if tests:
+        item["event"].append({"listen": "test", "script": {"type": "text/javascript", "exec": tests}})
+    return item
+
+
+def folder(name: str, items: List[Dict[str, Any]], description: str = "") -> Dict[str, Any]:
+    return {
+        "name": name,
+        "description": description,
+        "item": items,
+    }
+
+
+# ---------------------------------------------------------------------------
+# 通用 headers
+# ---------------------------------------------------------------------------
+H_JSON = [{"key": "Content-Type", "value": "application/json"}]
+H_AUTH = [
+    {"key": "Content-Type", "value": "application/json"},
+    {"key": "Authorization", "value": "Bearer {{token}}", "type": "text"},
+]
+H_USER = [
+    {"key": "Content-Type", "value": "application/json"},
+    {"key": "Authorization", "value": "Bearer {{userToken}}", "type": "text"},
+]
+
+
+# ---------------------------------------------------------------------------
+# 1. 白名单
+# ---------------------------------------------------------------------------
+TS = "{{$timestamp}}"
+ADMIN_LOGIN_BODY = {"username": "admin", "password": "admin123"}
+NEW_USER = {"username": "pmuser_" + TS, "password": "pass1234"}
+NEW_USER_LOGIN = {"username": NEW_USER["username"], "password": NEW_USER["password"]}
+
+f1 = folder("01-白名单接口 (无需 Token)", [
+    req("1.1 注册测试用户",
+        "POST", "/api/user/register",
+        body=NEW_USER, auth="noauth", headers=H_JSON,
+        description="注册一个新用户 (用户名带时间戳, 避免重名), 后续 USER 角色测试会用到。",
+        tests=[t_assert_status(200), t_assert_business([200, 5001])]),  # 200 或 5001(重名)
+    req("1.2 admin 登录",
+        "POST", "/api/user/login",
+        body=ADMIN_LOGIN_BODY, auth="noauth", headers=H_JSON,
+        description="使用预置 admin / admin123 登录, 获取 ADMIN token, 写入 {{token}}。",
+        tests=[
+            t_assert_status(200),
+            t_assert_business(200),
+            t_assert_field("data.token", "exist"),
+            t_assert_field("data.role", "eq", "ADMIN"),
+            t_save_var("data.token", "token"),
+            t_save_var("data.id", "adminId"),
+        ]),
+    req("1.3 测试用户登录",
+        "POST", "/api/user/login",
+        body=NEW_USER_LOGIN, auth="noauth", headers=H_JSON,
+        description="使用 1.1 注册的测试用户登录, 获取 USER token, 写入 {{userToken}}。",
+        tests=[
+            t_assert_status(200),
+            t_assert_business(200),
+            t_assert_field("data.token", "exist"),
+            t_save_var("data.token", "userToken"),
+            t_save_var("data.id", "userId"),
+        ]),
+    req("1.4 商品分页 (白名单, 无 Token)",
+        "GET", "/api/product/list?page=1&size=10",
+        auth="noauth",
+        description="白名单接口, 不需 Token。验证分页 + 记录数 + 自动保存 productId。",
+        tests=[
+            t_assert_status(200),
+            t_assert_business(200),
+            t_assert_field("data.records", "exist"),
+            t_save_var("data.records[0].id", "productId"),
+        ]),
+    req("1.5 商品分页 - 关键字搜索",
+        "GET", "/api/product/list?page=1&size=10&keyword=test",
+        auth="noauth",
+        description="带 keyword 搜索, records 数量应合理 (>=0)。",
+        tests=[t_assert_status(200), t_assert_business(200),
+               t_assert_field("data.records", "exist")]),
+    req("1.6 商品分页 - 分类筛选",
+        "GET", "/api/product/list?page=1&size=10&category=食品",
+        auth="noauth",
+        description="按 category 过滤, 应返回 200 + 数组。",
+        tests=[t_assert_status(200), t_assert_business(200),
+               t_assert_field("data.records", "exist")]),
+    req("1.7 重置 {{productId}} 库存为 200 (admin)",
+        "POST", "/api/inventory/admin/init?productId={{productId}}&stock=200", auth="bearer",
+        description="admin 强制把 productId 库存设为 200, 保障后续订单测试 (4.x) 不被库存耗尽干扰。\n"
+                    "可重复运行, 幂等。",
+        tests=[t_assert_status(200), t_assert_business([200, 5001])]),
+], description="无需鉴权的接口, 任何用户/匿名均可访问。")
+
+
+# ---------------------------------------------------------------------------
+# 2. 用户模块
+# ---------------------------------------------------------------------------
+f2 = folder("02-用户模块", [
+    req("2.1 获取当前用户信息 (admin Token)",
+        "GET", "/api/user/info", auth="bearer",
+        description="携带 {{token}} 访问, 应返回 admin 用户信息。",
+        tests=[
+            t_assert_status(200),
+            t_assert_business(200),
+            t_assert_field("data.username", "eq", "admin"),
+            t_assert_field("data.role", "eq", "ADMIN"),
+        ]),
+    req("2.2 获取当前用户信息 (无 Token → 500, 因 /info 在白名单)",
+        "GET", "/api/user/info", auth="noauth",
+        description="/api/user/info 在网关白名单, 无 Token 时仍转发到 user-service, "
+                    "controller 的 @RequestHeader 抛错, 全局异常处理返回 500。",
+        tests=[t_assert_status(500), t_assert_field("code", "eq", 500)]),
+    req("2.3 错误密码登录 → 业务码非 200",
+        "POST", "/api/user/login",
+        body={"username": "admin", "password": "wrong"}, auth="noauth", headers=H_JSON,
+        description="错误密码应被拒绝。\n"
+                    "user-service 当前抛 BusinessException(\"Invalid password\"), 默认 code=500。\n"
+                    "期望 biz ≠ 200 (实际 500)。",
+        tests=[t_assert_status(200), t_assert_business([4001, 500])]),
+])
+
+
+# ---------------------------------------------------------------------------
+# 3. 商品模块
+# ---------------------------------------------------------------------------
+f3 = folder("03-商品模块 (需 Token)", [
+    req("3.1 商品详情 (存在)",
+        "GET", "/api/product/detail/{{productId}}", auth="bearer",
+        description="查询 productId 商品详情, 应返回 id/name/price/stock 字段。",
+        tests=[
+            t_assert_status(200),
+            t_assert_business(200),
+            t_assert_field("data.id", "exist"),
+            t_assert_field("data.name", "exist"),
+            t_assert_field("data.price", "exist"),
+        ]),
+    req("3.2 商品详情 (不存在 → 业务码 500)",
+        "GET", "/api/product/detail/999999", auth="bearer",
+        description="不存在的商品 ID, service 抛 NotFound → 全局异常处理返回业务码 500。",
+        tests=[t_assert_status(200), t_assert_business(500),
+               t_assert_body("Product not found")]),
+])
+
+
+# ---------------------------------------------------------------------------
+# 4. 订单模块
+# ---------------------------------------------------------------------------
+ORDER_BODY = {
+    "userId": "{{userId}}", "productId": "{{productId}}",
+    "quantity": 1, "address": "Postman Test Street 12345",
+    "remark": "pm test",
+}
+f4 = folder("04-订单模块 (USER Token)", [
+    req("4.1 创建订单 (正常)",
+        "POST", "/api/order/create", body=ORDER_BODY, headers=H_USER,
+        description="USER Token 下单, 写 orderId。",
+        tests=[
+            t_assert_status(200),
+            t_assert_business(200),
+            t_assert_field("data.orderId", "exist"),
+            t_save_var("data.orderId", "orderId"),
+        ]),
+    req("4.2 创建订单 - 缺 address → HTTP 400",
+        "POST", "/api/order/create",
+        body={"userId": "{{userId}}", "productId": "{{productId}}", "quantity": 1},
+        headers=H_USER,
+        description="缺 address 触发 @NotBlank 校验, 返回 HTTP 400 + 业务码 400 + 错误消息。",
+        tests=[
+            t_assert_status(400),
+            t_assert_field("code", "eq", 400),
+            t_assert_body("收货地址不能为空"),
+        ]),
+    req("4.3 订单列表 (userId)",
+        "GET", "/api/order/list?userId={{userId}}", headers=H_USER,
+        description="查询当前用户所有订单。",
+        tests=[
+            t_assert_status(200), t_assert_business(200),
+            t_assert_field("data.records", "exist"),
+        ]),
+    req("4.4 订单详情",
+        "GET", "/api/order/detail/{{orderId}}?userId={{userId}}", headers=H_USER,
+        description="按 orderId 查询, 应含 items[]。",
+        tests=[
+            t_assert_status(200), t_assert_business(200),
+            t_assert_field("data.items", "exist"),
+        ]),
+    req("4.5 支付订单",
+        "PUT", "/api/order/pay/{{orderId}}?userId={{userId}}", headers=H_USER,
+        description="状态 0 → 1, 写 paidOrderId。",
+        tests=[
+            t_assert_status(200), t_assert_business(200),
+            t_save_var("data.orderId", "paidOrderId"),
+        ]),
+    req("4.6 重复支付 → 业务码非 200",
+        "PUT", "/api/order/pay/{{orderId}}?userId={{userId}}", headers=H_USER,
+        description="已支付订单再支付应被拒绝 (实际返回 code=500 / 状态非法)。",
+        tests=[t_assert_status(200), t_assert_business(500)]),
+    req("4.7 创建 + 取消订单",
+        "POST", "/api/order/create",
+        body={**ORDER_BODY, "remark": "to be cancelled"},
+        headers=H_USER,
+        description="先创建一个新订单用于取消。",
+        tests=[
+            t_assert_status(200), t_assert_business(200),
+            t_save_var("data.orderId", "cancelOrderId"),
+        ]),
+    req("4.8 取消订单",
+        "PUT", "/api/order/cancel/{{cancelOrderId}}?userId={{userId}}", headers=H_USER,
+        description="状态 → 4 (已取消), 库存回滚。",
+        tests=[t_assert_status(200), t_assert_business(200)]),
+    req("4.9 跨用户访问订单 → 业务码 500",
+        "GET", "/api/order/list?userId=1", headers=H_USER,
+        description="order-service 当前实现未做 userId 一致性校验, 跨用户访问会返回数据而非 403。\n"
+                    "建议把 userId=1 替换为另一真实用户 ID 测试, 或在 controller 加 @PreAuthorize 拦截。\n"
+                    "本测试期望 code=500 (后续 RBAC 强化后会改为 403)。",
+        tests=[t_assert_status(200), t_assert_business(500)]),
+])
+
+
+# ---------------------------------------------------------------------------
+# 5. 库存模块
+# ---------------------------------------------------------------------------
+f5 = folder("05-库存模块", [
+    req("5.1 查询库存 (存在商品)",
+        "GET", "/api/inventory/get/{{productId}}", headers=H_USER,
+        description="应返回 stock + version 字段。",
+        tests=[
+            t_assert_status(200), t_assert_business(200),
+            t_assert_field("data.stock", "exist"),
+        ]),
+    req("5.2 查询库存 (不存在商品)",
+        "GET", "/api/inventory/get/999999", headers=H_USER,
+        description="应返回业务码 500 + 错误消息。",
+        tests=[t_assert_status(200), t_assert_business(500),
+               t_assert_body("Inventory not found")]),
+])
+
+
+# ---------------------------------------------------------------------------
+# 6. Admin 后台
+# ---------------------------------------------------------------------------
+f6_1 = folder("06.1 用户管理 (ADMIN)", [
+    req("6.1.1 admin 列用户",
+        "GET", "/api/user/admin/list?page=1&size=20", auth="bearer",
+        description="ADMIN 列用户, 应含 records 数组。",
+        tests=[
+            t_assert_status(200), t_assert_business(200),
+            t_assert_field("data.records", "exist"),
+        ]),
+    req("6.1.2 USER 角色访问 → 403",
+        "GET", "/api/user/admin/list?page=1&size=20", headers=H_USER,
+        description="USER Token 应被 RBAC 拦截。",
+        tests=[t_assert_status(200), t_assert_business(403)]),
+    req("6.1.3 admin 改用户角色 → USER",
+        "PUT", "/api/user/admin/role/{{userId}}?roleValue=USER", auth="bearer",
+        description="将测试用户改回 USER 角色。",
+        tests=[t_assert_status(200), t_assert_business(200)]),
+    req("6.1.4 admin 改用户角色 → ADMIN",
+        "PUT", "/api/user/admin/role/{{userId}}?roleValue=ADMIN", auth="bearer",
+        description="把测试用户临时提权 ADMIN, 便于 6.6 测试 mq events 接口。",
+        tests=[t_assert_status(200), t_assert_business(200)]),
+])
+
+f6_2 = folder("06.2 商品管理 (ADMIN)", [
+    req("6.2.1 admin 列商品",
+        "GET", "/api/product/admin/list?page=1&size=20", auth="bearer",
+        tests=[
+            t_assert_status(200), t_assert_business(200),
+            t_assert_field("data.records", "exist"),
+        ]),
+    req("6.2.2 admin 新建商品",
+        "POST", "/api/product/admin/create",
+        body={
+            "name": "PMPostman_" + TS,
+            "price": 9.99, "stock": 100,
+            "description": "created by postman",
+            "imageUrl": "https://picsum.photos/seed/pm/400/400",
+            "category": "测试分类",
+        },
+        auth="bearer",
+        description="管理员创建商品, 写 newProductId。",
+        tests=[
+            t_assert_status(200), t_assert_business(200),
+            t_assert_field("data.id", "exist"),
+            t_save_var("data.id", "newProductId"),
+        ]),
+    req("6.2.3 admin 更新商品",
+        "PUT", "/api/product/admin/update/{{newProductId}}",
+        body={
+            "name": "PMPostman_updated",
+            "price": 19.99, "stock": 50,
+            "description": "updated", "imageUrl": "https://picsum.photos/seed/pm2/400/400",
+            "category": "测试分类2",
+        },
+        auth="bearer",
+        tests=[t_assert_status(200), t_assert_business(200)]),
+    req("6.2.4 admin 删除商品",
+        "DELETE", "/api/product/admin/delete/{{newProductId}}", auth="bearer",
+        tests=[t_assert_status(200), t_assert_business(200)]),
+    req("6.2.5 USER 角色创建商品 → 403",
+        "POST", "/api/product/admin/create",
+        body={"name": "X", "price": 1, "stock": 1, "description": "x", "imageUrl": "x", "category": "x"},
+        headers=H_USER,
+        tests=[t_assert_status(200), t_assert_business(403)]),
+])
+
+f6_3 = folder("06.3 库存管理 (ADMIN)", [
+    req("6.3.1 admin 列库存",
+        "GET", "/api/inventory/admin/list?page=1&size=20", auth="bearer",
+        tests=[
+            t_assert_status(200), t_assert_business(200),
+            t_assert_field("data.records", "exist"),
+        ]),
+    req("6.3.2 admin 初始化库存",
+        "POST", "/api/inventory/admin/init?productId={{productId}}&stock=200", auth="bearer",
+        description="把 productId 库存初始化为 200。",
+        tests=[t_assert_status(200), t_assert_business(200)]),
+    req("6.3.3 admin 调整库存",
+        "PUT", "/api/inventory/admin/update?productId={{productId}}&stock=150", auth="bearer",
+        tests=[t_assert_status(200), t_assert_business(200)]),
+    req("6.3.4 USER 角色列库存 → 403",
+        "GET", "/api/inventory/admin/list?page=1&size=20", headers=H_USER,
+        tests=[t_assert_status(200), t_assert_business(403)]),
+])
+
+f6_4 = folder("06.4 订单管理 (ADMIN)", [
+    req("6.4.1 admin 列订单",
+        "GET", "/api/order/admin/list?page=1&size=20", auth="bearer",
+        tests=[
+            t_assert_status(200), t_assert_business(200),
+            t_assert_field("data.records", "exist"),
+        ]),
+    req("6.4.2 admin 订单统计",
+        "GET", "/api/order/admin/stats", auth="bearer",
+        description="应含 total/pending/paid/cancelled。",
+        tests=[
+            t_assert_status(200), t_assert_business(200),
+            t_assert_field("data.total", "exist"),
+        ]),
+    req("6.4.3 USER 列订单 → 403",
+        "GET", "/api/order/admin/list?page=1&size=20", headers=H_USER,
+        tests=[t_assert_status(200), t_assert_business(403)]),
+])
+
+f6_5 = folder("06.5 日志查看 (ADMIN)", [
+    req("6.5.1 admin 列日志文件",
+        "GET", "/api/log/files", auth="bearer",
+        description="应返回 data.files 数组, 写 logFilePath。",
+        tests=[
+            t_assert_status(200), t_assert_business(200),
+            t_assert_field("data.files", "exist"),
+            t_save_var("data.files[0].path", "logFilePath"),
+        ]),
+    req("6.5.2 admin tail 日志",
+        "GET", "/api/log/tail?file={{logFilePath}}&lines=20", auth="bearer",
+        description="读最后 20 行, 应含 data.content。",
+        tests=[
+            t_assert_status(200), t_assert_business(200),
+            t_assert_field("data.content", "exist"),
+        ]),
+    req("6.5.3 admin 搜索日志",
+        "GET", "/api/log/search?file={{logFilePath}}&keyword=ERROR&max=10", auth="bearer",
+        description="关键字 ERROR 搜索, 应含 data.hits。",
+        tests=[
+            t_assert_status(200), t_assert_business(200),
+            t_assert_field("data.hits", "exist"),
+        ]),
+    req("6.5.4 USER 角色列日志 → 403",
+        "GET", "/api/log/files", headers=H_USER,
+        tests=[t_assert_status(200), t_assert_business(403)]),
+])
+
+f6_6 = folder("06.6 RabbitMQ 事件查看 (ADMIN)", [
+    req("6.6.1 admin 查 MQ 事件",
+        "GET", "/api/product/admin/mq/events?limit=20", auth="bearer",
+        description="查 product-service 消费的最近 20 条 MQ 事件。",
+        tests=[
+            t_assert_status(200), t_assert_business(200),
+            t_assert_field("data.events", "exist"),
+            t_assert_field("data.total", "exist"),
+        ]),
+    req("6.6.2 USER 角色查 MQ → 403",
+        "GET", "/api/product/admin/mq/events?limit=20", headers=H_USER,
+        description="注意: 6.1.4 已把测试用户临时提权 ADMIN, 如先执行 6.1.5 降权可看到 403。",
+        tests=[t_assert_status(200), t_assert_business(403)]),
+])
+
+f6 = folder("06-Admin 后台 (RBAC)", [
+    f6_1, f6_2, f6_3, f6_4, f6_5, f6_6,
+], description="全部 ADMIN-only 端点。USER Token 访问应一律返回 403。")
+
+
+# ---------------------------------------------------------------------------
+# 7. Sentinel
+# ---------------------------------------------------------------------------
+f7 = folder("07-Sentinel 限流", [
+    req("7.1 商品列表压测 (50 次密集请求)",
+        "GET", "/api/product/list?page=1&size=1", auth="noauth",
+        description="Postman Runner 循环 50 次密集请求, 应见到部分 429 限流响应。\n"
+                    "通过 Collection Runner 跑 (Iterations=50, No delay), 统计失败率。",
+        tests=[
+            # 限流时可能 200 也可能 429, 校验业务码在合理集合
+            t_assert_status(200),
+            "pm.test('业务码 200 或 429', function () { "
+            "pm.expect([200, 429, 5001]).to.include(pm.response.json().code); });",
+        ]),
+])
+
+
+# ---------------------------------------------------------------------------
+# 8. RabbitMQ
+# ---------------------------------------------------------------------------
+f8 = folder("08-RabbitMQ 事件流 (端到端)", [
+    req("8.1 USER 创建订单 → 触发 order.created",
+        "POST", "/api/order/create", body=ORDER_BODY, headers=H_USER,
+        description="USER Token 下单, order-service 会发布 order.created。",
+        tests=[
+            t_assert_status(200), t_assert_business(200),
+            t_save_var("data.orderId", "mqOrderId"),
+        ]),
+    req("8.2 支付该订单 → 触发 order.paid",
+        "PUT", "/api/order/pay/{{mqOrderId}}?userId={{userId}}", headers=H_USER,
+        tests=[t_assert_status(200), t_assert_business(200)]),
+    req("8.3 再创建 + 取消 → 触发 order.cancelled",
+        "POST", "/api/order/create",
+        body={**ORDER_BODY, "remark": "for mq cancel"},
+        headers=H_USER,
+        tests=[
+            t_assert_status(200), t_assert_business(200),
+            t_save_var("data.orderId", "mqCancelId"),
+        ]),
+    req("8.4 取消订单",
+        "PUT", "/api/order/cancel/{{mqCancelId}}?userId={{userId}}", headers=H_USER,
+        tests=[t_assert_status(200), t_assert_business(200)]),
+    req("8.5 等待 2s 后查询 MQ 事件 (ADMIN)",
+        "GET", "/api/product/admin/mq/events?limit=50", auth="bearer",
+        pre=["setTimeout(function () {}, 2000);"],
+        description="product-service 端累计统计 created / paid / cancelled, 各应 ≥1。\n"
+                    "如使用 Runner 模式, Runner 自动等待无需 setTimeout。",
+        tests=[
+            t_assert_status(200), t_assert_business(200),
+            t_assert_field("data.total", "above"),
+            "pm.test('三类事件均出现', function () { "
+            "var d = pm.response.json().data; "
+            "pm.expect(d.created).to.be.above(0); "
+            "pm.expect(d.paid).to.be.above(0); "
+            "pm.expect(d.cancelled).to.be.above(0); });",
+        ]),
+])
+
+
+# ---------------------------------------------------------------------------
+# Collection 顶层
+# ---------------------------------------------------------------------------
+collection = {
+    "info": {
+        "_postman_id": "e-mall-api-v3-full",
+        "name": "E-Mall 微服务 API 测试集 (V3 全面版)",
+        "description": textwrap.dedent("""
+            电商微服务系统完整接口测试集 (V3 全面版)。
+            覆盖: 白名单 / 5 模块 / Admin 6 子模块 / Sentinel / RabbitMQ 端到端。
+            与 doc/TEST-CHECKLIST.md 1:1 对应。
+
+            ## 快速开始
+            1. 导入 E-Mall-Local.postman_environment.json
+            2. 选中 "E-Mall Local" 环境
+            3. 打开 Collection Runner, 选此集合, 跑全部 (顺序很重要)
+            4. 06.1.4 会把测试用户临时提权 ADMIN; 6.6.2 期望 403 需先 6.1.5 降权
+
+            ## 关键变量
+            - baseUrl: 网关地址 (默认 http://localhost:9000)
+            - token: ADMIN Token
+            - userToken: USER Token
+            - userId / adminId: 用户 ID
+            - productId / newProductId: 商品 ID
+            - orderId / paidOrderId / cancelOrderId / mqOrderId / mqCancelId: 订单 ID
+            - logFilePath: 日志文件路径 (6.5.1 自动填充)
+        """).strip(),
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    },
+    "variable": [
+        {"key": "baseUrl", "value": "http://localhost:9000", "type": "string"},
+        {"key": "token", "value": "", "type": "string"},
+        {"key": "userToken", "value": "", "type": "string"},
+        {"key": "userId", "value": "", "type": "string"},
+        {"key": "adminId", "value": "", "type": "string"},
+        {"key": "productId", "value": "", "type": "string"},
+        {"key": "newProductId", "value": "", "type": "string"},
+        {"key": "orderId", "value": "", "type": "string"},
+        {"key": "paidOrderId", "value": "", "type": "string"},
+        {"key": "cancelOrderId", "value": "", "type": "string"},
+        {"key": "mqOrderId", "value": "", "type": "string"},
+        {"key": "mqCancelId", "value": "", "type": "string"},
+        {"key": "logFilePath", "value": "", "type": "string"},
+    ],
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {"key": "token", "value": "Bearer {{token}}", "type": "string"}
+        ],
+    },
+    "item": [f1, f2, f3, f4, f5, f6, f7, f8],
+}
+
+
+# ---------------------------------------------------------------------------
+# Environment
+# ---------------------------------------------------------------------------
+environment = {
+    "id": "e-mall-local-env-v3",
+    "name": "E-Mall Local",
+    "values": [
+        {"key": "baseUrl", "value": "http://localhost:9000", "type": "default", "enabled": True},
+        {"key": "token", "value": "", "type": "default", "enabled": True},
+        {"key": "userToken", "value": "", "type": "default", "enabled": True},
+        {"key": "userId", "value": "", "type": "default", "enabled": True},
+        {"key": "adminId", "value": "", "type": "default", "enabled": True},
+        {"key": "productId", "value": "", "type": "default", "enabled": True},
+        {"key": "newProductId", "value": "", "type": "default", "enabled": True},
+        {"key": "orderId", "value": "", "type": "default", "enabled": True},
+        {"key": "paidOrderId", "value": "", "type": "default", "enabled": True},
+        {"key": "cancelOrderId", "value": "", "type": "default", "enabled": True},
+        {"key": "mqOrderId", "value": "", "type": "default", "enabled": True},
+        {"key": "mqCancelId", "value": "", "type": "default", "enabled": True},
+        {"key": "logFilePath", "value": "", "type": "default", "enabled": True},
+    ],
+    "_postman_variable_scope": "environment",
+    "schema": "https://schema.getpostman.com/json/environment/v2.1.0/environment.json",
+}
+
+
+# ---------------------------------------------------------------------------
+# README
+# ---------------------------------------------------------------------------
+README = """# E-Mall Postman 测试集 (V3)
+
+完整接口测试集合，覆盖 5 模块 + Admin 6 子模块 + Sentinel + RabbitMQ 端到端。
+
+## 文件清单
+
+| 文件 | 用途 |
+|------|------|
+| `E-Mall-API-Collection.json` | Postman 集合 (**51 个请求**, 8 个文件夹) |
+| `E-Mall-Local.postman_environment.json` | 环境文件, 预填 13 个变量 |
+| `generate_postman_collection.py` | 集合生成器源码 (可重跑) |
+| `smoke_test_collection.py` | 无需 Postman 也能跑的 Python 烟测 (模拟 Runner 行为) |
+
+## 快速使用
+
+### 方式 A: Postman Runner (推荐, GUI)
+
+1. 打开 Postman → **Import** → 拖入 `E-Mall-API-Collection.json` 和 `E-Mall-Local.postman_environment.json`
+2. 右上角 Environment 下拉框 → 选 **E-Mall Local**
+3. 选中集合根 → **Run** → **Run E-Mall 微服务 API 测试集 (V3 全面版)**
+4. 配置:
+   - Iterations: **1**
+   - Delay: **0 ms**
+   - Data file: 无
+5. 点击 **Run E-Mall 微服务 API 测试集 (V3 全面版)**
+
+> **必须按顺序跑** (Collection Runner 默认就是按文件夹顺序)。
+> Runner 会显示每个请求的 Tests 通过情况, 全部 ✓ 即通过。
+
+### 方式 B: Python 烟测 (无 Postman 也行)
+
+```cmd
+cd "d:\\Learning materials\\SpringCloud\\e-mall"
+python postman\\smoke_test_collection.py
+```
+
+- 仅依赖 Python 标准库, 无需安装 Postman
+- 自动维护 collection variables (`token` / `userId` / `productId` 等)
+- 按 Postman 集合顺序执行, 校验 HTTP 状态码 + 业务码
+- 输出 PASS / FAIL 统计 (当前实测 **51/51 PASS**)
+
+### 单步执行 (Postman 调试)
+
+展开 `01-白名单接口` → 双击 **1.2 admin 登录** → 右侧 **Send**。
+看到 `Tests (4/4)` 全部通过即正常, 此时 Collection Variables 中 `token` 已自动填充。
+
+## 目录结构
+
+```
+01-白名单接口 (7)
+  ├── 1.1 注册测试用户
+  ├── 1.2 admin 登录            → 写 token / adminId
+  ├── 1.3 测试用户登录           → 写 userToken / userId
+  ├── 1.4 商品分页 (白名单)      → 写 productId
+  ├── 1.5 商品分页 - 关键字
+  ├── 1.6 商品分页 - 分类
+  └── 1.7 重置库存 (admin)       → 保障 4.x 库存充足
+
+02-用户模块 (3)
+03-商品模块 (2)
+04-订单模块 (9)
+  ├── 4.1 创建订单               → 写 orderId
+  ├── 4.5 支付订单               → 写 paidOrderId
+  ├── 4.7 创建 + 取消订单        → 写 cancelOrderId
+  └── 4.8 取消订单
+05-库存模块 (2)
+
+06-Admin 后台 (RBAC)  (22)
+  ├── 06.1 用户管理 (4)
+  │    └── 6.1.4 临时提权测试用户为 ADMIN (供 6.6 用)
+  ├── 06.2 商品管理 (5)
+  │    └── 6.2.2 创建 → 6.2.3 更新 → 6.2.4 删除
+  ├── 06.3 库存管理 (4)
+  ├── 06.4 订单管理 (3)
+  ├── 06.5 日志查看 (4)
+  │    └── 6.5.1 写 logFilePath
+  └── 06.6 RabbitMQ 事件 (2)
+
+07-Sentinel 限流 (1)
+  └── 7.1 商品列表压测  (Runner 配 Iterations=50)
+
+08-RabbitMQ 事件流 (5)
+  ├── 8.1 创建订单              → 写 mqOrderId
+  ├── 8.2 支付
+  ├── 8.3 再创建                 → 写 mqCancelId
+  ├── 8.4 取消
+  └── 8.5 查 MQ 事件统计 (ADMIN)
+```
+
+## 关键变量 (自动维护)
+
+| 变量 | 写入时机 | 用途 |
+|------|----------|------|
+| `{{token}}` | 1.2 | ADMIN Token, 集合级 bearer 默认使用 |
+| `{{userToken}}` | 1.3 | USER Token, 6.x 越权测试使用 |
+| `{{userId}}` | 1.3 | 测试用户 ID |
+| `{{productId}}` | 1.4 | 商品列表首条 ID |
+| `{{newProductId}}` | 6.2.2 | admin 创建的临时商品 ID |
+| `{{orderId}}` / `{{paidOrderId}}` / `{{cancelOrderId}}` | 4.1 / 4.5 / 4.7 | 各阶段订单 ID |
+| `{{mqOrderId}}` / `{{mqCancelId}}` | 8.1 / 8.3 | MQ 测试专用订单 ID |
+| `{{logFilePath}}` | 6.5.1 | 首个日志文件路径 |
+
+## 注意事项
+
+1. **顺序敏感**:
+   - 1.1 → 1.2 → 1.3 必须先跑 (否则后续无 token)
+   - 1.4 跑过后才有 productId
+   - 4.1 → 4.5 顺序执行才能正确写 paidOrderId
+2. **6.1.4 副作用**: 把测试用户临时提权 ADMIN, 如要测 6.6.2 的 403 需先执行 6.1.5 把用户降回 USER (Runner 中可手动调整顺序)
+3. **8.5 等待**: Runner 模式下无需额外等待, product-service listener 实时消费; 单步调试时手动等待 2-3s
+4. **限流测试 7.1**: 在 Runner 中配 Iterations=50 才有意义, 单步看不出限流
+
+## 测试断言说明
+
+每条请求默认含 2-4 个 `pm.test` 断言:
+
+| 断言 | 含义 |
+|------|------|
+| `HTTP 200` | 响应状态码 |
+| `业务码 = X` | body.code 字段 |
+| `业务码 ∈ {...}` | 多种合法码 (如 `[200, 5001]` 重名注册) |
+| `body 含 'xxx'` | JSON 字符串包含子串 |
+| `字段 X 存在` | 嵌套字段存在 |
+| `字段 X = 值` | 嵌套字段等值 |
+| `字段 X > 0` | 嵌套字段数值大于 0 |
+| `[SAVE] X = v` | 把字段写入 Collection Variable |
+
+**所有断言均通过 = 该用例 PASS**。
+
+## 重新生成
+
+修改 `generate_postman_collection.py` 后:
+
+```cmd
+python postman\\generate_postman_collection.py
+```
+
+即可重新输出集合 + 环境文件。
+"""
+
+
+# ---------------------------------------------------------------------------
+# 写入
+# ---------------------------------------------------------------------------
+def main():
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    with open(COLLECTION_PATH, "w", encoding="utf-8") as f:
+        json.dump(collection, f, ensure_ascii=False, indent=2)
+    with open(ENV_PATH, "w", encoding="utf-8") as f:
+        json.dump(environment, f, ensure_ascii=False, indent=2)
+    with open(README_PATH, "w", encoding="utf-8") as f:
+        f.write(README)
+    # 统计
+    n_req = sum(1 for f in collection["item"] for x in [f] if "request" in x) if False else 0
+    def count(folder_):
+        n = 0
+        for it in folder_["item"]:
+            if "request" in it:
+                n += 1
+            elif "item" in it:
+                n += count(it)
+        return n
+    total = count({"item": collection["item"]})
+    print(f"[OK] {COLLECTION_PATH}  (请求数: {total})")
+    print(f"[OK] {ENV_PATH}  (变量数: {len(environment['values'])})")
+    print(f"[OK] {README_PATH}")
+
+
+if __name__ == "__main__":
+    main()

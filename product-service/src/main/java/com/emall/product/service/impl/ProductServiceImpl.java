@@ -44,6 +44,11 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
     @Override
     public void addProduct(AddProductRequest request) {
+        this.addProductAndReturn(request);
+    }
+
+    @Override
+    public Product addProductAndReturn(AddProductRequest request) {
         Product product = new Product();
         product.setName(request.getName());
         product.setPrice(request.getPrice());
@@ -54,6 +59,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         product.setStatus(STATUS_ACTIVE);
 
         this.save(product);
+        return product;
     }
 
     @Override

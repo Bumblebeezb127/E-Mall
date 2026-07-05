@@ -13,6 +13,12 @@ public interface ProductService extends IService<Product> {
 
     void addProduct(AddProductRequest request);
 
+    /**
+     * 新增商品并返回新生成的商品对象 (含 id).
+     * 供 adminCreate controller 直接返回 data, 便于客户端链式调用 (update/delete).
+     */
+    Product addProductAndReturn(AddProductRequest request);
+
     void updateStock(Long productId, Integer delta);
 
     // Admin

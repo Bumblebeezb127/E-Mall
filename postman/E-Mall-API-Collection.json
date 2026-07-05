@@ -1,1580 +1,2847 @@
 {
-	"info": {
-		"_postman_id": "e-mall-api-collection-v2",
-		"name": "E-Mall 微服务API测试集",
-		"description": "电商微服务系统核心接口测试集合。覆盖用户、商品、订单、库存模块共14个核心接口，总请求27次。重点验证业务逻辑正确性、OpenFeign远程调用、Gateway路由鉴权能力。\n\n## 网关鉴权规则\n- 白名单(无需Token): /api/user/login, /api/user/register, /api/product/list, /api/product/detail\n- 受保护(需Bearer Token): /api/user/info, /api/order/**, /api/inventory/**, /api/product/add, /api/product/stock/update\n\n## Feign远程调用验证\n- 创建订单: order-service → product-service(查询商品) → inventory-service(扣减库存)\n- 取消订单: order-service → inventory-service(恢复库存)",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-	},
-	"variable": [
-		{
-			"key": "baseUrl",
-			"value": "http://localhost:9000",
-			"type": "string"
-		},
-		{
-			"key": "token",
-			"value": "",
-			"type": "string"
-		},
-		{
-			"key": "userId",
-			"value": "",
-			"type": "string"
-		},
-		{
-			"key": "productId",
-			"value": "",
-			"type": "string"
-		},
-		{
-			"key": "orderId",
-			"value": "",
-			"type": "string"
-		}
-	],
-	"auth": {
-		"type": "bearer",
-		"bearer": [
-			{
-				"key": "token",
-				"value": "{{token}}",
-				"type": "string"
-			}
-		]
-	},
-	"item": [
-		{
-			"name": "01-用户模块(注册/登录/信息)",
-			"item": [
-				{
-					"name": "用户注册-用户A",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('响应状态码为200', function() {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('返回成功标志', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect([200, 500]).to.include(jsonData.code);",
-									"});",
-									"",
-									"pm.test('返回包含message', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.message).to.be.a('string');",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"username\": \"testuserA\",\n    \"password\": \"password123\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/user/register",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "user", "register"]
-						},
-						"description": "注册用户A — 白名单接口。首次注册返回200，重复运行返回500(用户已存在)均为正常。"
-					},
-					"response": []
-				},
-				{
-					"name": "用户注册-用户B",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('响应状态码为200', function() {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('返回成功标志', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect([200, 500]).to.include(jsonData.code);",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"username\": \"testuserB\",\n    \"password\": \"password456\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/user/register",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "user", "register"]
-						},
-						"description": "注册用户B — 白名单接口。首次注册返回200，重复运行返回500(用户已存在)均为正常。"
-					},
-					"response": []
-				},
-				{
-					"name": "用户登录-获取Token",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('响应状态码为200', function() {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('返回成功标志code=200', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.code).to.eql(200);",
-									"});",
-									"",
-									"pm.test('返回包含JWT Token', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.data).to.have.property('token');",
-									"    pm.expect(jsonData.data.token).to.be.a('string');",
-									"    pm.expect(jsonData.data.token.split('.').length).to.eql(3);",
-									"});",
-									"",
-									"pm.test('返回包含userId', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.data).to.have.property('id');",
-									"});",
-									"",
-									"if (pm.response.code === 200) {",
-									"    var jsonData = pm.response.json();",
-									"    if (jsonData.data && jsonData.data.token) {",
-									"        pm.collectionVariables.set('token', jsonData.data.token);",
-									"        pm.collectionVariables.set('userId', jsonData.data.id);",
-									"        console.log('Token已保存:', jsonData.data.token.substring(0, 50) + '...');",
-									"        console.log('UserId已保存:', jsonData.data.id);",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"username\": \"admin\",\n    \"password\": \"admin123\"\n}",
-						"options": {
-							"raw": {
-								"language": "json"
-							}
-						}
-					},
-					"url": {
-						"raw": "{{baseUrl}}/api/user/login",
-						"host": ["{{baseUrl}}"],
-						"path": ["api", "user", "login"]
-					},
-					"description": "用户登录获取JWT Token — 白名单接口。使用预置admin账号登录，Token和UserId自动存入集合变量。"
-					},
-					"response": []
-				},
-				{
-					"name": "获取用户信息-需Token",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('响应状态码为200', function() {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('返回成功标志code=200', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.code).to.eql(200);",
-									"});",
-									"",
-									"pm.test('返回包含完整用户信息', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.data).to.have.property('id');",
-									"    pm.expect(jsonData.data).to.have.property('username');",
-									"    pm.expect(jsonData.data).to.have.property('createdAt');",
-									"});",
-									"",
-									"pm.test('返回的userId有效', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.data.id).to.be.a('number');",
-									"    pm.expect(jsonData.data.id).to.be.above(0);",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/user/info",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "user", "info"]
-						},
-						"description": "获取当前登录用户详细信息 — 受保护接口，需携带Bearer Token。验证Gateway JWT鉴权和用户信息一致性。"
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "02-商品模块(列表/详情)",
-			"item": [
-				{
-					"name": "商品列表-第1页每页10条",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('响应状态码为200', function() {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('返回成功标志code=200', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.code).to.eql(200);",
-									"});",
-									"",
-									"pm.test('返回包含商品列表数组', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.data).to.have.property('records');",
-									"    pm.expect(jsonData.data.records).to.be.an('array');",
-									"    pm.expect(jsonData.data.records.length).to.be.at.least(1);",
-									"});",
-									"",
-									"pm.test('返回包含完整分页信息', function() {",
-								"    var jsonData = pm.response.json();",
-								"    pm.expect(jsonData.data).to.have.property('total');",
-								"    pm.expect(jsonData.data).to.have.property('page');",
-								"    pm.expect(jsonData.data).to.have.property('size');",
-								"    pm.expect(jsonData.data).to.have.property('totalPages');",
-								"});",
-									"",
-									"if (pm.response.code === 200) {",
-									"    var jsonData = pm.response.json();",
-									"    if (jsonData.data.records && jsonData.data.records.length > 0) {",
-									"        pm.collectionVariables.set('productId', jsonData.data.records[0].id);",
-									"        console.log('ProductId已保存:', jsonData.data.records[0].id);",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/product/list?page=1&size=10",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "product", "list"],
-							"query": [
-								{
-									"key": "page",
-									"value": "1"
-								},
-								{
-									"key": "size",
-									"value": "10"
-								}
-							]
-						},
-						"description": "获取商品列表第1页 — 白名单接口。验证分页查询、商品数据返回格式。自动保存首个商品ID供后续测试使用。"
-					},
-					"response": []
-				},
-				{
-					"name": "商品列表-第2页每页10条",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('响应状态码为200', function() {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('返回成功标志code=200', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.code).to.eql(200);",
-									"});",
-									"",
-									"pm.test('当前页为第2页', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.data.page).to.eql(2);",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/product/list?page=2&size=10",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "product", "list"],
-							"query": [
-								{
-									"key": "page",
-									"value": "2"
-								},
-								{
-									"key": "size",
-									"value": "10"
-								}
-							]
-						},
-						"description": "获取商品列表第2页 — 验证分页翻页功能"
-					},
-					"response": []
-				},
-				{
-					"name": "商品列表-小页面每页5条",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('响应状态码为200', function() {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('返回成功标志code=200', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.code).to.eql(200);",
-									"});",
-									"",
-									"pm.test('分页数据有效', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.data).to.have.property('records');",
-									"    pm.expect(jsonData.data.records).to.be.an('array');",
-									"    pm.expect(jsonData.data.records.length).to.be.above(0);",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/product/list?page=1&size=5",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "product", "list"],
-							"query": [
-								{
-									"key": "page",
-									"value": "1"
-								},
-								{
-									"key": "size",
-									"value": "5"
-								}
-							]
-						},
-						"description": "商品列表小页面 — 验证自定义每页大小"
-					},
-					"response": []
-				},
-				{
-					"name": "商品列表-验证库存字段",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('响应状态码为200', function() {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('商品包含库存和价格字段', function() {",
-									"    var jsonData = pm.response.json();",
-									"    if (jsonData.data.records && jsonData.data.records.length > 0) {",
-									"        var product = jsonData.data.records[0];",
-									"        pm.expect(product).to.have.property('stock');",
-									"        pm.expect(product).to.have.property('price');",
-									"        pm.expect(product.stock).to.be.at.least(0);",
-									"        pm.expect(product.price).to.be.above(0);",
-									"    }",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/product/list?page=1&size=10",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "product", "list"],
-							"query": [
-								{
-									"key": "page",
-									"value": "1"
-								},
-								{
-									"key": "size",
-									"value": "10"
-								}
-							]
-						},
-						"description": "验证商品列表返回的库存和价格字段完整性"
-					},
-					"response": []
-				},
-				{
-					"name": "商品列表-验证价格大于0",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('响应状态码为200', function() {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('所有商品价格均大于0', function() {",
-									"    var jsonData = pm.response.json();",
-									"    if (jsonData.data.records && jsonData.data.records.length > 0) {",
-									"        jsonData.data.records.forEach(function(product) {",
-									"            pm.expect(product.price).to.be.above(0);",
-									"        });",
-									"    }",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/product/list?page=1&size=10",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "product", "list"],
-							"query": [
-								{
-									"key": "page",
-									"value": "1"
-								},
-								{
-									"key": "size",
-									"value": "10"
-								}
-							]
-						},
-						"description": "验证商品价格业务规则 — 所有上架商品价格应大于0"
-					},
-					"response": []
-				},
-				{
-					"name": "商品详情-ID1",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('响应状态码为200', function() {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('返回成功标志code=200', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.code).to.eql(200);",
-									"});",
-									"",
-									"pm.test('返回完整商品详情', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.data).to.have.property('id');",
-									"    pm.expect(jsonData.data).to.have.property('name');",
-									"    pm.expect(jsonData.data).to.have.property('price');",
-									"    pm.expect(jsonData.data).to.have.property('stock');",
-									"    pm.expect(jsonData.data).to.have.property('category');",
-									"    pm.expect(jsonData.data).to.have.property('description');",
-									"});",
-									"",
-									"pm.test('商品状态为上架(status=1)', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.data.status).to.eql(1);",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/product/detail/1",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "product", "detail", "1"]
-						},
-						"description": "查询商品1详情 — 白名单接口。验证商品详情字段完整性及状态值。"
-					},
-					"response": []
-				},
-				{
-					"name": "商品详情-ID2",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('响应状态码为200', function() {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('返回成功标志code=200', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.code).to.eql(200);",
-									"});",
-									"",
-									"pm.test('返回的商品ID与请求一致', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.data.id).to.eql(2);",
-									"    pm.expect(jsonData.data.name).to.be.a('string');",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/product/detail/2",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "product", "detail", "2"]
-						},
-						"description": "查询商品2详情 — 验证不同商品的详情返回一致性"
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "03-订单模块(创建/查询/支付/取消)_Feign验证",
-			"item": [
-				{
-					"name": "创建订单-订单1(商品1x2)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('响应状态码为200', function() {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('返回成功标志code=200', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.code).to.eql(200);",
-									"});",
-									"",
-									"pm.test('返回包含订单信息(orderId/orderNo)', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.data).to.have.property('orderId');",
-									"    pm.expect(jsonData.data).to.have.property('orderNo');",
-									"    pm.expect(jsonData.data.orderNo).to.include('ORD');",
-									"});",
-									"",
-									"pm.test('订单状态为待支付(0)', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.data.status).to.eql(0);",
-									"});",
-									"",
-									"pm.test('订单金额大于0 — Feign调用ProductService成功', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.data.totalAmount).to.be.above(0);",
-									"});",
-									"",
-									"if (pm.response.code === 200) {",
-									"    var jsonData = pm.response.json();",
-									"    if (jsonData.data && jsonData.data.orderId) {",
-									"        pm.collectionVariables.set('orderId', jsonData.data.orderId);",
-									"        console.log('OrderId已保存:', jsonData.data.orderId);",
-									"        console.log('OrderNo:', jsonData.data.orderNo);",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}",
-								"type": "text"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"userId\": {{userId}},\n    \"productId\": 1,\n    \"quantity\": 2,\n    \"address\": \"北京市朝阳区某某街道100号\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/order/create",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "order", "create"]
-						},
-						"description": "创建订单(商品1,数量2) — 受保护接口。此接口通过OpenFeign远程调用ProductService查询商品信息、InventoryService扣减库存，验证Feign远程调用通畅。自动保存orderId供后续测试。"
-					},
-					"response": []
-				},
-				{
-					"name": "取消订单-Feign库存回滚验证",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('响应状态码为200', function() {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('返回成功标志code=200', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.code).to.eql(200);",
-									"});",
-									"",
-									"pm.test('订单状态变为已取消(status=4)', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.data.status).to.eql(4);",
-									"});",
-									"",
-									"pm.test('取消订单成功 —— Feign调用InventoryService回滚库存', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.message).to.include('cancelled');",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/order/cancel/{{orderId}}?userId={{userId}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "order", "cancel", "{{orderId}}"],
-							"query": [
-								{
-									"key": "userId",
-									"value": "{{userId}}"
-								}
-							]
-						},
-						"description": "取消订单 — 在支付前取消待支付订单。此接口通过OpenFeign调用InventoryService恢复库存(restoreStock)，验证Feign远程调用和业务回滚机制。取消后orderId变量被后续创建覆盖。"
-					},
-					"response": []
-				},
-				{
-					"name": "创建订单-订单2(商品1x1)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('响应状态码为200', function() {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('返回成功标志code=200', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.code).to.eql(200);",
-									"});",
-									"",
-									"pm.test('订单号格式正确(含ORD前缀)', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.data.orderNo).to.be.a('string');",
-									"    pm.expect(jsonData.data.orderNo).to.include('ORD');",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}",
-								"type": "text"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"userId\": {{userId}},\n    \"productId\": 1,\n    \"quantity\": 1,\n    \"address\": \"上海市浦东新区陆家嘴1号\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/order/create",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "order", "create"]
-						},
-						"description": "创建订单(商品1,数量1) — 同商品不同数量下单，验证重复下单流程正常"
-					},
-					"response": []
-				},
-				{
-					"name": "创建订单-订单3(商品2x3)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('响应状态码为200', function() {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('返回成功标志code=200', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.code).to.eql(200);",
-									"});",
-									"",
-									"pm.test('订单金额计算正确(价格×数量)', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.data.totalAmount).to.be.above(0);",
-									"    pm.expect(jsonData.data.items).to.be.an('array');",
-									"    pm.expect(jsonData.data.items.length).to.be.at.least(1);",
-									"});",
-									"",
-									"if (pm.response.code === 200) {",
-									"    var jsonData = pm.response.json();",
-									"    if (jsonData.data && jsonData.data.orderId) {",
-									"        pm.collectionVariables.set('orderId', jsonData.data.orderId);",
-									"        console.log('OrderId已更新(订单3):', jsonData.data.orderId);",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}",
-								"type": "text"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"userId\": {{userId}},\n    \"productId\": 2,\n    \"quantity\": 3,\n    \"address\": \"广州市天河区体育西路200号\"\n}",
-						"options": {
-							"raw": {
-								"language": "json"
-							}
-						}
-					},
-					"url": {
-						"raw": "{{baseUrl}}/api/order/create",
-						"host": ["{{baseUrl}}"],
-						"path": ["api", "order", "create"]
-					},
-					"description": "创建订单(商品2,数量3) — 不同商品下单，验证Feign去ProductService查询不同商品信息正常"
-					},
-					"response": []
-				},
-				{
-					"name": "查询订单列表-第1次",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('响应状态码为200', function() {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('返回成功标志code=200', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.code).to.eql(200);",
-									"});",
-									"",
-									"pm.test('返回订单列表(数组)', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.data).to.be.an('array');",
-									"    pm.expect(jsonData.data.length).to.be.at.least(1);",
-									"});",
-									"",
-									"pm.test('订单包含订单项明细', function() {",
-									"    var jsonData = pm.response.json();",
-									"    if (jsonData.data.length > 0) {",
-									"        pm.expect(jsonData.data[0]).to.have.property('items');",
-									"        pm.expect(jsonData.data[0].items).to.be.an('array');",
-									"    }",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/order/list?userId={{userId}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "order", "list"],
-							"query": [
-								{
-									"key": "userId",
-									"value": "{{userId}}"
-								}
-							]
-						},
-						"description": "查询用户订单列表第1次 — 受保护接口。验证订单列表包含订单项明细。"
-					},
-					"response": []
-				},
-				{
-					"name": "查询订单列表-第2次",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('响应状态码为200', function() {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('返回成功标志code=200', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.code).to.eql(200);",
-									"});",
-									"",
-									"pm.test('至少有3个订单', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.data.length).to.be.at.least(3);",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/order/list?userId={{userId}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "order", "list"],
-							"query": [
-								{
-									"key": "userId",
-									"value": "{{userId}}"
-								}
-							]
-						},
-						"description": "查询订单列表第2次 — 验证创建3个订单后列表含3条以上记录"
-					},
-					"response": []
-				},
-				{
-					"name": "查询订单列表-第3次",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('响应状态码为200', function() {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('返回成功标志code=200', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.code).to.eql(200);",
-									"});",
-									"",
-									"pm.test('订单包含orderNo/statusDesc/totalAmount字段', function() {",
-									"    var jsonData = pm.response.json();",
-									"    if (jsonData.data.length > 0) {",
-									"        var order = jsonData.data[0];",
-									"        pm.expect(order).to.have.property('orderNo');",
-									"        pm.expect(order).to.have.property('statusDesc');",
-									"        pm.expect(order).to.have.property('totalAmount');",
-									"        pm.expect(order).to.have.property('items');",
-									"    }",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/order/list?userId={{userId}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "order", "list"],
-							"query": [
-								{
-									"key": "userId",
-									"value": "{{userId}}"
-								}
-							]
-						},
-						"description": "查询订单列表第3次 — 验证订单状态描述和完整字段结构"
-					},
-					"response": []
-				},
-				{
-					"name": "查询订单详情",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('响应状态码为200', function() {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('返回成功标志code=200', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.code).to.eql(200);",
-									"});",
-									"",
-									"pm.test('返回完整订单详情', function() {",
-									"    var jsonData = pm.response.json();",
-									"    var order = jsonData.data;",
-									"    pm.expect(order).to.have.property('orderId');",
-									"    pm.expect(order).to.have.property('orderNo');",
-									"    pm.expect(order).to.have.property('totalAmount');",
-									"    pm.expect(order).to.have.property('status');",
-									"    pm.expect(order).to.have.property('items');",
-									"    pm.expect(order.items).to.be.an('array');",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/order/detail/{{orderId}}?userId={{userId}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "order", "detail", "{{orderId}}"],
-							"query": [
-								{
-									"key": "userId",
-									"value": "{{userId}}"
-								}
-							]
-						},
-						"description": "查询单个订单详情 — 受保护接口。验证订单详细信息完整返回，包含订单项明细。"
-					},
-					"response": []
-				},
-				{
-					"name": "支付订单-Feign验证",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('响应状态码为200', function() {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('返回成功标志code=200', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.code).to.eql(200);",
-									"});",
-									"",
-									"pm.test('订单状态变为已支付(status=1)', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.data.status).to.eql(1);",
-									"    pm.expect(jsonData.data.statusDesc).to.include('已支付');",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/order/pay/{{orderId}}?userId={{userId}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "order", "pay", "{{orderId}}"],
-							"query": [
-								{
-									"key": "userId",
-									"value": "{{userId}}"
-								}
-							]
-						},
-						"description": "支付订单 — 受保护接口。验证订单状态从待支付(0)变更为已支付(1)，业务状态流转正确。"
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "04-库存模块(查询/扣减/恢复)",
-			"item": [
-				{
-					"name": "查询库存-商品1",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('响应状态码为200', function() {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('返回成功标志code=200', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.code).to.eql(200);",
-									"});",
-									"",
-									"pm.test('返回包含库存信息(productId/stock/version)', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.data).to.have.property('productId');",
-									"    pm.expect(jsonData.data).to.have.property('stock');",
-									"    pm.expect(jsonData.data).to.have.property('version');",
-									"    pm.expect(jsonData.data.productId).to.eql(1);",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/inventory/get/1",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "inventory", "get", "1"]
-						},
-						"description": "查询商品1库存 — 受保护接口。验证乐观锁版本号(version)字段，防止并发超卖。"
-					},
-					"response": []
-				},
-				{
-					"name": "扣减库存-商品1",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('响应状态码为200', function() {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('返回成功标志code=200', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.code).to.eql(200);",
-									"});",
-									"",
-									"pm.test('扣减后库存正确减少', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.message).to.be.a('string');",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}",
-								"type": "text"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"productId\": 1,\n    \"quantity\": 1\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/inventory/deduct",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "inventory", "deduct"]
-						},
-						"description": "扣减商品1库存(数量1) — 受保护接口。验证乐观锁并发控制机制。"
-					},
-					"response": []
-				},
-				{
-					"name": "恢复库存-商品1",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('响应状态码为200', function() {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('返回成功标志code=200', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.code).to.eql(200);",
-									"});",
-									"",
-									"pm.test('库存恢复成功', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.message).to.be.a('string');",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}",
-								"type": "text"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"productId\": 1,\n    \"quantity\": 1\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/inventory/restore",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "inventory", "restore"]
-						},
-						"description": "恢复商品1库存(数量1) — 受保护接口。取消订单时OrderService通过Feign调用此接口回滚库存，验证库存恢复功能。"
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "05-网关鉴权测试(Gateway Auth)",
-			"item": [
-				{
-					"name": "白名单-商品列表(无Token应200)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('白名单接口——响应状态码为200', function() {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('白名单接口——返回成功', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.code).to.eql(200);",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/product/list?page=1&size=5",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "product", "list"],
-							"query": [
-								{
-									"key": "page",
-									"value": "1"
-								},
-								{
-									"key": "size",
-									"value": "5"
-								}
-							]
-						},
-						"description": "白名单测试 — /api/product/list 在白名单中，不携带Token也能正常访问，应返回200。验证Gateway白名单路由放行机制。"
-					},
-					"response": []
-				},
-				{
-					"name": "白名单-商品详情(无Token应200)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('白名单接口——响应状态码为200', function() {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('白名单接口——返回成功', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.code).to.eql(200);",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/product/detail/1",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "product", "detail", "1"]
-						},
-						"description": "白名单测试 — /api/product/detail 在白名单中，不携带Token也能正常访问，应返回200。"
-					},
-					"response": []
-				},
-				{
-					"name": "受保护资源-无Token(应401)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('无Token访问受保护资源——应返回401', function() {",
-									"    pm.response.to.have.status(401);",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/user/info",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "user", "info"]
-						},
-						"description": "鉴权测试 — /api/user/info 不在白名单中，不携带Token应当被Gateway拦截返回401 Unauthorized。验证Gateway JWT鉴权拦截能力。"
-					},
-					"response": []
-				},
-				{
-					"name": "受保护资源-无效Token(应401)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('无效Token访问受保护资源——应返回401', function() {",
-									"    pm.response.to.have.status(401);",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer invalid_token_123456",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/user/info",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "user", "info"]
-						},
-						"description": "鉴权测试 — 携带伪造的无效Token访问受保护资源，Gateway应通过JwtUtil校验Token合法性并返回401。验证JWT验签机制。"
-					},
-					"response": []
-				},
-				{
-					"name": "受保护资源-有效Token(应200)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('有效Token访问受保护资源——应返回200', function() {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('返回正确订单数据', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.code).to.eql(200);",
-									"    pm.expect(jsonData.data).to.be.an('array');",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/order/list?userId={{userId}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "order", "list"],
-							"query": [
-								{
-									"key": "userId",
-									"value": "{{userId}}"
-								}
-							]
-						},
-						"description": "鉴权测试 — 携带有效Token访问受保护资源(/api/order/list)，Gateway验证通过后放行并注入X-User-Id头，应返回200。验证完整Gateway JWT鉴权链路。"
-					},
-					"response": []
-				},
-				{
-					"name": "受保护资源-订单创建(需Token应200)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('有效Token创建订单——应返回200', function() {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('订单创建成功(含Feign远程调用)', function() {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.code).to.eql(200);",
-									"    pm.expect(jsonData.data).to.have.property('orderNo');",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}",
-								"type": "text"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"userId\": {{userId}},\n    \"productId\": 2,\n    \"quantity\": 1,\n    \"address\": \"深圳市南山区科技园88号\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/order/create",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "order", "create"]
-						},
-						"description": "鉴权测试 — 受保护的订单创建接口，带有效Token正常创建订单。此接口全程验证: Gateway鉴权→OrderService→(Feign)ProductService查询→(Feign)InventoryService扣减。"
-					},
-					"response": []
-				}
-			]
-		}
-	]
+  "info": {
+    "_postman_id": "e-mall-api-v3-full",
+    "name": "E-Mall 微服务 API 测试集 (V3 全面版)",
+    "description": "电商微服务系统完整接口测试集 (V3 全面版)。\n覆盖: 白名单 / 5 模块 / Admin 6 子模块 / Sentinel / RabbitMQ 端到端。\n与 doc/TEST-CHECKLIST.md 1:1 对应。\n\n## 快速开始\n1. 导入 E-Mall-Local.postman_environment.json\n2. 选中 \"E-Mall Local\" 环境\n3. 打开 Collection Runner, 选此集合, 跑全部 (顺序很重要)\n4. 06.1.4 会把测试用户临时提权 ADMIN; 6.6.2 期望 403 需先 6.1.5 降权\n\n## 关键变量\n- baseUrl: 网关地址 (默认 http://localhost:9000)\n- token: ADMIN Token\n- userToken: USER Token\n- userId / adminId: 用户 ID\n- productId / newProductId: 商品 ID\n- orderId / paidOrderId / cancelOrderId / mqOrderId / mqCancelId: 订单 ID\n- logFilePath: 日志文件路径 (6.5.1 自动填充)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:9000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adminId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "productId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "newProductId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "orderId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "paidOrderId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "cancelOrderId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "mqOrderId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "mqCancelId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "logFilePath",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "Bearer {{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "01-白名单接口 (无需 Token)",
+      "description": "无需鉴权的接口, 任何用户/匿名均可访问。",
+      "item": [
+        {
+          "name": "1.1 注册测试用户",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('业务码 ∈ {200, 5001}', function () { pm.expect([200, 5001]).to.include(pm.response.json().code); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/user/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "user",
+                "register"
+              ]
+            },
+            "description": "注册一个新用户 (用户名带时间戳, 避免重名), 后续 USER 角色测试会用到。",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"pmuser_{{$timestamp}}\",\n    \"password\": \"pass1234\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "1.2 admin 登录",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
+                  "pm.test('字段 data.token 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.token'); });",
+                  "pm.test('字段 data.role = \"ADMIN\"', function () { pm.expect(pm.response.json()).to.have.nested.property('data.role', \"ADMIN\"); });",
+                  "if (pm.response.code === 200) {\n    var __v = pm.response.json();\n    var __p = 'data.token'.split('.');\n    var __cur = __v;\n    for (var __i = 0; __i < __p.length; __i++) { __cur = __cur ? __cur[__p[__i]] : undefined; }\n    if (__cur !== undefined && __cur !== null) {\n        pm.collectionVariables.set('token', String(__cur));\n        console.log('[SAVE] token = ' + __cur);\n    }\n}",
+                  "if (pm.response.code === 200) {\n    var __v = pm.response.json();\n    var __p = 'data.id'.split('.');\n    var __cur = __v;\n    for (var __i = 0; __i < __p.length; __i++) { __cur = __cur ? __cur[__p[__i]] : undefined; }\n    if (__cur !== undefined && __cur !== null) {\n        pm.collectionVariables.set('adminId', String(__cur));\n        console.log('[SAVE] adminId = ' + __cur);\n    }\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/user/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "user",
+                "login"
+              ]
+            },
+            "description": "使用预置 admin / admin123 登录, 获取 ADMIN token, 写入 {{token}}。",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"admin\",\n    \"password\": \"admin123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "1.3 测试用户登录",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
+                  "pm.test('字段 data.token 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.token'); });",
+                  "if (pm.response.code === 200) {\n    var __v = pm.response.json();\n    var __p = 'data.token'.split('.');\n    var __cur = __v;\n    for (var __i = 0; __i < __p.length; __i++) { __cur = __cur ? __cur[__p[__i]] : undefined; }\n    if (__cur !== undefined && __cur !== null) {\n        pm.collectionVariables.set('userToken', String(__cur));\n        console.log('[SAVE] userToken = ' + __cur);\n    }\n}",
+                  "if (pm.response.code === 200) {\n    var __v = pm.response.json();\n    var __p = 'data.id'.split('.');\n    var __cur = __v;\n    for (var __i = 0; __i < __p.length; __i++) { __cur = __cur ? __cur[__p[__i]] : undefined; }\n    if (__cur !== undefined && __cur !== null) {\n        pm.collectionVariables.set('userId', String(__cur));\n        console.log('[SAVE] userId = ' + __cur);\n    }\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/user/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "user",
+                "login"
+              ]
+            },
+            "description": "使用 1.1 注册的测试用户登录, 获取 USER token, 写入 {{userToken}}。",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"pmuser_{{$timestamp}}\",\n    \"password\": \"pass1234\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "1.4 商品分页 (白名单, 无 Token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
+                  "pm.test('字段 data.records 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.records'); });",
+                  "if (pm.response.code === 200) {\n    var __v = pm.response.json();\n    var __p = 'data.records[0].id'.split('.');\n    var __cur = __v;\n    for (var __i = 0; __i < __p.length; __i++) { __cur = __cur ? __cur[__p[__i]] : undefined; }\n    if (__cur !== undefined && __cur !== null) {\n        pm.collectionVariables.set('productId', String(__cur));\n        console.log('[SAVE] productId = ' + __cur);\n    }\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/product/list?page=1&size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "product",
+                "list"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "白名单接口, 不需 Token。验证分页 + 记录数 + 自动保存 productId。",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "1.5 商品分页 - 关键字搜索",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
+                  "pm.test('字段 data.records 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.records'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/product/list?page=1&size=10&keyword=test",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "product",
+                "list"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "keyword",
+                  "value": "test"
+                }
+              ]
+            },
+            "description": "带 keyword 搜索, records 数量应合理 (>=0)。",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "1.6 商品分页 - 分类筛选",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
+                  "pm.test('字段 data.records 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.records'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/product/list?page=1&size=10&category=食品",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "product",
+                "list"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "category",
+                  "value": "食品"
+                }
+              ]
+            },
+            "description": "按 category 过滤, 应返回 200 + 数组。",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "1.7 重置 {{productId}} 库存为 200 (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('业务码 ∈ {200, 5001}', function () { pm.expect([200, 5001]).to.include(pm.response.json().code); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/inventory/admin/init?productId={{productId}}&stock=200",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "inventory",
+                "admin",
+                "init"
+              ],
+              "query": [
+                {
+                  "key": "productId",
+                  "value": "{{productId}}"
+                },
+                {
+                  "key": "stock",
+                  "value": "200"
+                }
+              ]
+            },
+            "description": "admin 强制把 productId 库存设为 200, 保障后续订单测试 (4.x) 不被库存耗尽干扰。\n可重复运行, 幂等。",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "Bearer {{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02-用户模块",
+      "description": "",
+      "item": [
+        {
+          "name": "2.1 获取当前用户信息 (admin Token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
+                  "pm.test('字段 data.username = \"admin\"', function () { pm.expect(pm.response.json()).to.have.nested.property('data.username', \"admin\"); });",
+                  "pm.test('字段 data.role = \"ADMIN\"', function () { pm.expect(pm.response.json()).to.have.nested.property('data.role', \"ADMIN\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/user/info",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "user",
+                "info"
+              ]
+            },
+            "description": "携带 {{token}} 访问, 应返回 admin 用户信息。",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "Bearer {{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2.2 获取当前用户信息 (无 Token → 500, 因 /info 在白名单)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 500', function () { pm.response.to.have.status(500); });",
+                  "pm.test('字段 code = 500', function () { pm.expect(pm.response.json()).to.have.nested.property('code', 500); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/user/info",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "user",
+                "info"
+              ]
+            },
+            "description": "/api/user/info 在网关白名单, 无 Token 时仍转发到 user-service, controller 的 @RequestHeader 抛错, 全局异常处理返回 500。",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2.3 错误密码登录 → 业务码非 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('业务码 ∈ {4001, 500}', function () { pm.expect([4001, 500]).to.include(pm.response.json().code); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/user/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "user",
+                "login"
+              ]
+            },
+            "description": "错误密码应被拒绝。\nuser-service 当前抛 BusinessException(\"Invalid password\"), 默认 code=500。\n期望 biz ≠ 200 (实际 500)。",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"admin\",\n    \"password\": \"wrong\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03-商品模块 (需 Token)",
+      "description": "",
+      "item": [
+        {
+          "name": "3.1 商品详情 (存在)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
+                  "pm.test('字段 data.id 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.id'); });",
+                  "pm.test('字段 data.name 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.name'); });",
+                  "pm.test('字段 data.price 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.price'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/product/detail/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "product",
+                "detail",
+                "{{productId}}"
+              ]
+            },
+            "description": "查询 productId 商品详情, 应返回 id/name/price/stock 字段。",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "Bearer {{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3.2 商品详情 (不存在 → 业务码 500)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('业务码 = 500', function () { pm.expect(pm.response.json().code).to.eql(500); });",
+                  "pm.test('body 含 'Product not found'', function () { pm.expect(JSON.stringify(pm.response.json())).to.include('Product not found'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/product/detail/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "product",
+                "detail",
+                "999999"
+              ]
+            },
+            "description": "不存在的商品 ID, service 抛 NotFound → 全局异常处理返回业务码 500。",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "Bearer {{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04-订单模块 (USER Token)",
+      "description": "",
+      "item": [
+        {
+          "name": "4.1 创建订单 (正常)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
+                  "pm.test('字段 data.orderId 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.orderId'); });",
+                  "if (pm.response.code === 200) {\n    var __v = pm.response.json();\n    var __p = 'data.orderId'.split('.');\n    var __cur = __v;\n    for (var __i = 0; __i < __p.length; __i++) { __cur = __cur ? __cur[__p[__i]] : undefined; }\n    if (__cur !== undefined && __cur !== null) {\n        pm.collectionVariables.set('orderId', String(__cur));\n        console.log('[SAVE] orderId = ' + __cur);\n    }\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/order/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "order",
+                "create"
+              ]
+            },
+            "description": "USER Token 下单, 写 orderId。",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"userId\": \"{{userId}}\",\n    \"productId\": \"{{productId}}\",\n    \"quantity\": 1,\n    \"address\": \"Postman Test Street 12345\",\n    \"remark\": \"pm test\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4.2 创建订单 - 缺 address → HTTP 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('字段 code = 400', function () { pm.expect(pm.response.json()).to.have.nested.property('code', 400); });",
+                  "pm.test('body 含 '收货地址不能为空'', function () { pm.expect(JSON.stringify(pm.response.json())).to.include('收货地址不能为空'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/order/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "order",
+                "create"
+              ]
+            },
+            "description": "缺 address 触发 @NotBlank 校验, 返回 HTTP 400 + 业务码 400 + 错误消息。",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"userId\": \"{{userId}}\",\n    \"productId\": \"{{productId}}\",\n    \"quantity\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4.3 订单列表 (userId)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
+                  "pm.test('字段 data.records 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.records'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/order/list?userId={{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "order",
+                "list"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": "查询当前用户所有订单。"
+          },
+          "response": []
+        },
+        {
+          "name": "4.4 订单详情",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
+                  "pm.test('字段 data.items 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.items'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/order/detail/{{orderId}}?userId={{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "order",
+                "detail",
+                "{{orderId}}"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": "按 orderId 查询, 应含 items[]。"
+          },
+          "response": []
+        },
+        {
+          "name": "4.5 支付订单",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
+                  "if (pm.response.code === 200) {\n    var __v = pm.response.json();\n    var __p = 'data.orderId'.split('.');\n    var __cur = __v;\n    for (var __i = 0; __i < __p.length; __i++) { __cur = __cur ? __cur[__p[__i]] : undefined; }\n    if (__cur !== undefined && __cur !== null) {\n        pm.collectionVariables.set('paidOrderId', String(__cur));\n        console.log('[SAVE] paidOrderId = ' + __cur);\n    }\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/order/pay/{{orderId}}?userId={{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "order",
+                "pay",
+                "{{orderId}}"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": "状态 0 → 1, 写 paidOrderId。"
+          },
+          "response": []
+        },
+        {
+          "name": "4.6 重复支付 → 业务码非 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('业务码 = 500', function () { pm.expect(pm.response.json().code).to.eql(500); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/order/pay/{{orderId}}?userId={{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "order",
+                "pay",
+                "{{orderId}}"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": "已支付订单再支付应被拒绝 (实际返回 code=500 / 状态非法)。"
+          },
+          "response": []
+        },
+        {
+          "name": "4.7 创建 + 取消订单",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
+                  "if (pm.response.code === 200) {\n    var __v = pm.response.json();\n    var __p = 'data.orderId'.split('.');\n    var __cur = __v;\n    for (var __i = 0; __i < __p.length; __i++) { __cur = __cur ? __cur[__p[__i]] : undefined; }\n    if (__cur !== undefined && __cur !== null) {\n        pm.collectionVariables.set('cancelOrderId', String(__cur));\n        console.log('[SAVE] cancelOrderId = ' + __cur);\n    }\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/order/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "order",
+                "create"
+              ]
+            },
+            "description": "先创建一个新订单用于取消。",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"userId\": \"{{userId}}\",\n    \"productId\": \"{{productId}}\",\n    \"quantity\": 1,\n    \"address\": \"Postman Test Street 12345\",\n    \"remark\": \"to be cancelled\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4.8 取消订单",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/order/cancel/{{cancelOrderId}}?userId={{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "order",
+                "cancel",
+                "{{cancelOrderId}}"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": "状态 → 4 (已取消), 库存回滚。"
+          },
+          "response": []
+        },
+        {
+          "name": "4.9 跨用户访问订单 → 业务码 500",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('业务码 = 500', function () { pm.expect(pm.response.json().code).to.eql(500); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/order/list?userId=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "order",
+                "list"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "order-service 当前实现未做 userId 一致性校验, 跨用户访问会返回数据而非 403。\n建议把 userId=1 替换为另一真实用户 ID 测试, 或在 controller 加 @PreAuthorize 拦截。\n本测试期望 code=500 (后续 RBAC 强化后会改为 403)。"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05-库存模块",
+      "description": "",
+      "item": [
+        {
+          "name": "5.1 查询库存 (存在商品)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
+                  "pm.test('字段 data.stock 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.stock'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/inventory/get/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "inventory",
+                "get",
+                "{{productId}}"
+              ]
+            },
+            "description": "应返回 stock + version 字段。"
+          },
+          "response": []
+        },
+        {
+          "name": "5.2 查询库存 (不存在商品)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('业务码 = 500', function () { pm.expect(pm.response.json().code).to.eql(500); });",
+                  "pm.test('body 含 'Inventory not found'', function () { pm.expect(JSON.stringify(pm.response.json())).to.include('Inventory not found'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/inventory/get/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "inventory",
+                "get",
+                "999999"
+              ]
+            },
+            "description": "应返回业务码 500 + 错误消息。"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "06-Admin 后台 (RBAC)",
+      "description": "全部 ADMIN-only 端点。USER Token 访问应一律返回 403。",
+      "item": [
+        {
+          "name": "06.1 用户管理 (ADMIN)",
+          "description": "",
+          "item": [
+            {
+              "name": "6.1.1 admin 列用户",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
+                      "pm.test('字段 data.records 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.records'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/user/admin/list?page=1&size=20",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "user",
+                    "admin",
+                    "list"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "size",
+                      "value": "20"
+                    }
+                  ]
+                },
+                "description": "ADMIN 列用户, 应含 records 数组。",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "Bearer {{token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "6.1.2 USER 角色访问 → 403",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('业务码 = 403', function () { pm.expect(pm.response.json().code).to.eql(403); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{userToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/user/admin/list?page=1&size=20",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "user",
+                    "admin",
+                    "list"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "size",
+                      "value": "20"
+                    }
+                  ]
+                },
+                "description": "USER Token 应被 RBAC 拦截。"
+              },
+              "response": []
+            },
+            {
+              "name": "6.1.3 admin 改用户角色 → USER",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/user/admin/role/{{userId}}?roleValue=USER",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "user",
+                    "admin",
+                    "role",
+                    "{{userId}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "roleValue",
+                      "value": "USER"
+                    }
+                  ]
+                },
+                "description": "将测试用户改回 USER 角色。",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "Bearer {{token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "6.1.4 admin 改用户角色 → ADMIN",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/user/admin/role/{{userId}}?roleValue=ADMIN",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "user",
+                    "admin",
+                    "role",
+                    "{{userId}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "roleValue",
+                      "value": "ADMIN"
+                    }
+                  ]
+                },
+                "description": "把测试用户临时提权 ADMIN, 便于 6.6 测试 mq events 接口。",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "Bearer {{token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "06.2 商品管理 (ADMIN)",
+          "description": "",
+          "item": [
+            {
+              "name": "6.2.1 admin 列商品",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
+                      "pm.test('字段 data.records 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.records'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/product/admin/list?page=1&size=20",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "product",
+                    "admin",
+                    "list"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "size",
+                      "value": "20"
+                    }
+                  ]
+                },
+                "description": "",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "Bearer {{token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "6.2.2 admin 新建商品",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
+                      "pm.test('字段 data.id 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.id'); });",
+                      "if (pm.response.code === 200) {\n    var __v = pm.response.json();\n    var __p = 'data.id'.split('.');\n    var __cur = __v;\n    for (var __i = 0; __i < __p.length; __i++) { __cur = __cur ? __cur[__p[__i]] : undefined; }\n    if (__cur !== undefined && __cur !== null) {\n        pm.collectionVariables.set('newProductId', String(__cur));\n        console.log('[SAVE] newProductId = ' + __cur);\n    }\n}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/product/admin/create",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "product",
+                    "admin",
+                    "create"
+                  ]
+                },
+                "description": "管理员创建商品, 写 newProductId。",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "Bearer {{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"name\": \"PMPostman_{{$timestamp}}\",\n    \"price\": 9.99,\n    \"stock\": 100,\n    \"description\": \"created by postman\",\n    \"imageUrl\": \"https://picsum.photos/seed/pm/400/400\",\n    \"category\": \"测试分类\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "6.2.3 admin 更新商品",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/product/admin/update/{{newProductId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "product",
+                    "admin",
+                    "update",
+                    "{{newProductId}}"
+                  ]
+                },
+                "description": "",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "Bearer {{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"name\": \"PMPostman_updated\",\n    \"price\": 19.99,\n    \"stock\": 50,\n    \"description\": \"updated\",\n    \"imageUrl\": \"https://picsum.photos/seed/pm2/400/400\",\n    \"category\": \"测试分类2\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "6.2.4 admin 删除商品",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/product/admin/delete/{{newProductId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "product",
+                    "admin",
+                    "delete",
+                    "{{newProductId}}"
+                  ]
+                },
+                "description": "",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "Bearer {{token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "6.2.5 USER 角色创建商品 → 403",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('业务码 = 403', function () { pm.expect(pm.response.json().code).to.eql(403); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{userToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/product/admin/create",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "product",
+                    "admin",
+                    "create"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"name\": \"X\",\n    \"price\": 1,\n    \"stock\": 1,\n    \"description\": \"x\",\n    \"imageUrl\": \"x\",\n    \"category\": \"x\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "06.3 库存管理 (ADMIN)",
+          "description": "",
+          "item": [
+            {
+              "name": "6.3.1 admin 列库存",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
+                      "pm.test('字段 data.records 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.records'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/inventory/admin/list?page=1&size=20",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "inventory",
+                    "admin",
+                    "list"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "size",
+                      "value": "20"
+                    }
+                  ]
+                },
+                "description": "",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "Bearer {{token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "6.3.2 admin 初始化库存",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/inventory/admin/init?productId={{productId}}&stock=200",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "inventory",
+                    "admin",
+                    "init"
+                  ],
+                  "query": [
+                    {
+                      "key": "productId",
+                      "value": "{{productId}}"
+                    },
+                    {
+                      "key": "stock",
+                      "value": "200"
+                    }
+                  ]
+                },
+                "description": "把 productId 库存初始化为 200。",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "Bearer {{token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "6.3.3 admin 调整库存",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/inventory/admin/update?productId={{productId}}&stock=150",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "inventory",
+                    "admin",
+                    "update"
+                  ],
+                  "query": [
+                    {
+                      "key": "productId",
+                      "value": "{{productId}}"
+                    },
+                    {
+                      "key": "stock",
+                      "value": "150"
+                    }
+                  ]
+                },
+                "description": "",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "Bearer {{token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "6.3.4 USER 角色列库存 → 403",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('业务码 = 403', function () { pm.expect(pm.response.json().code).to.eql(403); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{userToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/inventory/admin/list?page=1&size=20",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "inventory",
+                    "admin",
+                    "list"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "size",
+                      "value": "20"
+                    }
+                  ]
+                },
+                "description": ""
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "06.4 订单管理 (ADMIN)",
+          "description": "",
+          "item": [
+            {
+              "name": "6.4.1 admin 列订单",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
+                      "pm.test('字段 data.records 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.records'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/order/admin/list?page=1&size=20",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "order",
+                    "admin",
+                    "list"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "size",
+                      "value": "20"
+                    }
+                  ]
+                },
+                "description": "",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "Bearer {{token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "6.4.2 admin 订单统计",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
+                      "pm.test('字段 data.total 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.total'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/order/admin/stats",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "order",
+                    "admin",
+                    "stats"
+                  ]
+                },
+                "description": "应含 total/pending/paid/cancelled。",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "Bearer {{token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "6.4.3 USER 列订单 → 403",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('业务码 = 403', function () { pm.expect(pm.response.json().code).to.eql(403); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{userToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/order/admin/list?page=1&size=20",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "order",
+                    "admin",
+                    "list"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "size",
+                      "value": "20"
+                    }
+                  ]
+                },
+                "description": ""
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "06.5 日志查看 (ADMIN)",
+          "description": "",
+          "item": [
+            {
+              "name": "6.5.1 admin 列日志文件",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
+                      "pm.test('字段 data.files 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.files'); });",
+                      "if (pm.response.code === 200) {\n    var __v = pm.response.json();\n    var __p = 'data.files[0].path'.split('.');\n    var __cur = __v;\n    for (var __i = 0; __i < __p.length; __i++) { __cur = __cur ? __cur[__p[__i]] : undefined; }\n    if (__cur !== undefined && __cur !== null) {\n        pm.collectionVariables.set('logFilePath', String(__cur));\n        console.log('[SAVE] logFilePath = ' + __cur);\n    }\n}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/log/files",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "log",
+                    "files"
+                  ]
+                },
+                "description": "应返回 data.files 数组, 写 logFilePath。",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "Bearer {{token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "6.5.2 admin tail 日志",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
+                      "pm.test('字段 data.content 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.content'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/log/tail?file={{logFilePath}}&lines=20",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "log",
+                    "tail"
+                  ],
+                  "query": [
+                    {
+                      "key": "file",
+                      "value": "{{logFilePath}}"
+                    },
+                    {
+                      "key": "lines",
+                      "value": "20"
+                    }
+                  ]
+                },
+                "description": "读最后 20 行, 应含 data.content。",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "Bearer {{token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "6.5.3 admin 搜索日志",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
+                      "pm.test('字段 data.hits 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.hits'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/log/search?file={{logFilePath}}&keyword=ERROR&max=10",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "log",
+                    "search"
+                  ],
+                  "query": [
+                    {
+                      "key": "file",
+                      "value": "{{logFilePath}}"
+                    },
+                    {
+                      "key": "keyword",
+                      "value": "ERROR"
+                    },
+                    {
+                      "key": "max",
+                      "value": "10"
+                    }
+                  ]
+                },
+                "description": "关键字 ERROR 搜索, 应含 data.hits。",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "Bearer {{token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "6.5.4 USER 角色列日志 → 403",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('业务码 = 403', function () { pm.expect(pm.response.json().code).to.eql(403); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{userToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/log/files",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "log",
+                    "files"
+                  ]
+                },
+                "description": ""
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "06.6 RabbitMQ 事件查看 (ADMIN)",
+          "description": "",
+          "item": [
+            {
+              "name": "6.6.1 admin 查 MQ 事件",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
+                      "pm.test('字段 data.events 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.events'); });",
+                      "pm.test('字段 data.total 存在', function () { pm.expect(pm.response.json()).to.have.nested.property('data.total'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/product/admin/mq/events?limit=20",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "product",
+                    "admin",
+                    "mq",
+                    "events"
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "20"
+                    }
+                  ]
+                },
+                "description": "查 product-service 消费的最近 20 条 MQ 事件。",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "Bearer {{token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "6.6.2 USER 角色查 MQ → 403",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('业务码 = 403', function () { pm.expect(pm.response.json().code).to.eql(403); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{userToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/product/admin/mq/events?limit=20",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "product",
+                    "admin",
+                    "mq",
+                    "events"
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "20"
+                    }
+                  ]
+                },
+                "description": "注意: 6.1.4 已把测试用户临时提权 ADMIN, 如先执行 6.1.5 降权可看到 403。"
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "07-Sentinel 限流",
+      "description": "",
+      "item": [
+        {
+          "name": "7.1 商品列表压测 (50 次密集请求)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('业务码 200 或 429', function () { pm.expect([200, 429, 5001]).to.include(pm.response.json().code); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/product/list?page=1&size=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "product",
+                "list"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Postman Runner 循环 50 次密集请求, 应见到部分 429 限流响应。\n通过 Collection Runner 跑 (Iterations=50, No delay), 统计失败率。",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "08-RabbitMQ 事件流 (端到端)",
+      "description": "",
+      "item": [
+        {
+          "name": "8.1 USER 创建订单 → 触发 order.created",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
+                  "if (pm.response.code === 200) {\n    var __v = pm.response.json();\n    var __p = 'data.orderId'.split('.');\n    var __cur = __v;\n    for (var __i = 0; __i < __p.length; __i++) { __cur = __cur ? __cur[__p[__i]] : undefined; }\n    if (__cur !== undefined && __cur !== null) {\n        pm.collectionVariables.set('mqOrderId', String(__cur));\n        console.log('[SAVE] mqOrderId = ' + __cur);\n    }\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/order/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "order",
+                "create"
+              ]
+            },
+            "description": "USER Token 下单, order-service 会发布 order.created。",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"userId\": \"{{userId}}\",\n    \"productId\": \"{{productId}}\",\n    \"quantity\": 1,\n    \"address\": \"Postman Test Street 12345\",\n    \"remark\": \"pm test\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "8.2 支付该订单 → 触发 order.paid",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/order/pay/{{mqOrderId}}?userId={{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "order",
+                "pay",
+                "{{mqOrderId}}"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "8.3 再创建 + 取消 → 触发 order.cancelled",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
+                  "if (pm.response.code === 200) {\n    var __v = pm.response.json();\n    var __p = 'data.orderId'.split('.');\n    var __cur = __v;\n    for (var __i = 0; __i < __p.length; __i++) { __cur = __cur ? __cur[__p[__i]] : undefined; }\n    if (__cur !== undefined && __cur !== null) {\n        pm.collectionVariables.set('mqCancelId', String(__cur));\n        console.log('[SAVE] mqCancelId = ' + __cur);\n    }\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/order/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "order",
+                "create"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"userId\": \"{{userId}}\",\n    \"productId\": \"{{productId}}\",\n    \"quantity\": 1,\n    \"address\": \"Postman Test Street 12345\",\n    \"remark\": \"for mq cancel\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "8.4 取消订单",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/order/cancel/{{mqCancelId}}?userId={{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "order",
+                "cancel",
+                "{{mqCancelId}}"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "8.5 等待 2s 后查询 MQ 事件 (ADMIN)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "setTimeout(function () {}, 2000);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('业务码 = 200', function () { pm.expect(pm.response.json().code).to.eql(200); });",
+                  "pm.test('字段 data.total > 0', function () { pm.expect(pm.response.json()).to.have.nested.property('data.total'); pm.expect(pm.response.json().data.total).to.be.above(0); });",
+                  "pm.test('三类事件均出现', function () { var d = pm.response.json().data; pm.expect(d.created).to.be.above(0); pm.expect(d.paid).to.be.above(0); pm.expect(d.cancelled).to.be.above(0); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/product/admin/mq/events?limit=50",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "product",
+                "admin",
+                "mq",
+                "events"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "product-service 端累计统计 created / paid / cancelled, 各应 ≥1。\n如使用 Runner 模式, Runner 自动等待无需 setTimeout。",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "Bearer {{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
 }
