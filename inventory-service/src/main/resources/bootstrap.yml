@@ -13,3 +13,4 @@ spring:
         namespace: public
         group: DEFAULT_GROUP
         refresh-enabled: true
+        enabled: true
