@@ -1,23 +1,13 @@
-spring:
-  application:
-    name: log-service
-  cloud:
-    nacos:
-      discovery:
-        server-addr: 127.0.0.1:8848
-  rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
-    virtual-host: /
-    listener:
-      simple:
-        acknowledge-mode: auto
-        prefetch: 10
-
 emall:
   log:
     root: ${EMALL_LOG_ROOT:logs}
     max-file-size-mb: 50
     max-tail-lines: 5000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+    health:
+      show-details: always

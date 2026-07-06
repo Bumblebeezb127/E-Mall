@@ -4,10 +4,10 @@ spring:
     url: jdbc:mysql://localhost:3306/db_user?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: emall_app
     password: Emall@2024
-    hikari:
-      maximum-pool-size: 30
-      minimum-idle: 5
-      connection-timeout: 30000
+
+jwt:
+  secret: a8f5f167f44f4964e6c998dee827110c
+  expiration: 1800000
 
 mybatis-plus:
   configuration:
@@ -15,33 +15,11 @@ mybatis-plus:
   global-config:
     db-config:
       id-type: auto
-      logic-delete-field: deleted
-      logic-delete-value: 1
-      logic-not-delete-value: 0
-  mapper-locations: classpath*:/mapper/**/*.xml
 
-jwt:
-  secret: a8f5f167f44f4964e6c998dee827110c
-  expiration: 86400000
-  header: Authorization
-  prefix: Bearer
-
-feign:
-  client:
-    config:
-      default:
-        connectTimeout: 5000
-        readTimeout: 5000
-  compression:
-    request:
-      enabled: true
-    response:
-      enabled: true
-
-sentinel:
-  eager:
-    enabled: true
-  transport:
-    dashboard: localhost:8858
-  metrics:
-    enabled: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+    health:
+      show-details: always

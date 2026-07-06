@@ -10,20 +10,63 @@ spring:
           type: fixed
           max-connections: 500
           acquire-timeout: 45000
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
+      routes:
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/user/**
+          filters:
+            - StripPrefix=1
 
-sentinel:
-  eager:
-    enabled: true
-  transport:
-    dashboard: localhost:8858
-  metrics:
-    enabled: true
-  filter:
-    enabled: true
+        - id: product-service
+          uri: lb://product-service
+          predicates:
+            - Path=/api/product/**
+          filters:
+            - StripPrefix=1
 
-feign:
-  client:
-    config:
-      default:
-        connectTimeout: 5000
-        readTimeout: 5000
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/api/order/**
+          filters:
+            - StripPrefix=1
+
+        - id: inventory-service
+          uri: lb://inventory-service
+          predicates:
+            - Path=/api/inventory/**
+          filters:
+            - StripPrefix=1
+
+        - id: log-service
+          uri: lb://log-service
+          predicates:
+            - Path=/api/log/**
+          filters:
+            - StripPrefix=1
+
+jwt:
+  secret: a8f5f167f44f4964e6c998dee827110c
+  expiration: 1800000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+    health:
+      show-details: always
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG

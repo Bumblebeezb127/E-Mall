@@ -8,33 +8,14 @@ spring:
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   global-config:
     db-config:
       id-type: auto
-  mapper-locations: classpath*:/mapper/**/*.xml
 
-feign:
-  client:
-    config:
-      default:
-        connectTimeout: 5000
-        readTimeout: 5000
-  compression:
-    request:
-      enabled: true
-    response:
-      enabled: true
-
-sentinel:
-  eager:
-    enabled: true
-  transport:
-    dashboard: localhost:8858
-  metrics:
-    enabled: true
-
-retry:
-  max-attempts: 3
-  delay: 100
-  multiplier: 2
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+    health:
+      show-details: always
